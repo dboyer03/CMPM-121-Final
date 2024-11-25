@@ -18,11 +18,32 @@ body {
 #app {
   display: flex;
   justify-content: center;
-  align-items: flex-start;
-  height: 100vh;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+  padding: 20px;
 }
 
 h1 {
   font-size: 2em;
   color: var(--primary-color);
+}
+
+.grid-cell {
+  width: 32px;
+  height: 32px;
+  background: #8B4513; 
+  border: 1px solid #3d1f09;
+  box-sizing: border-box;
+  display: flex;           
+  justify-content: center; 
+  align-items: center;     
+}
+
+.player {
+  background: rgb(255, 255, 255);
+  border-radius: 50%;
+  width: 24px;            
+  height: 24px;           
+  border: 1px solid black; 
 }
