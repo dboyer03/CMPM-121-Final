@@ -1,0 +1,28 @@
+:root {
+  --font-family: 'Arial', sans-serif;
+  --primary-color: #000000;
+  --background-color: #ffffff;
+  --text-color: #000000;
+
+  font-family: var(--font-family);
+  color: var(--text-color);
+  background-color: var(--background-color);
+}
+
+body {
+  margin: 0;
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+#app {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  height: 100vh;
+}
+
+h1 {
+  font-size: 2em;
+  color: var(--primary-color);
+}
