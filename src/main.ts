@@ -1,8 +1,8 @@
 // main
 
 import "./style.css";
-import { Grid } from './grid.ts';
-import { Player } from './player.ts';
+import { Grid } from "./grid.ts";
+import { Player } from "./player.ts";
 
 const GAME_NAME = "CMPM 121 Final Project - Group 33";
 const GRID_SIZE = 10;
@@ -27,34 +27,42 @@ app.appendChild(gameContainer);
 updateDisplay();
 
 // add keyboard controls
-document.addEventListener('keydown', (e) => {
+document.addEventListener("keydown", (e) => {
   switch (e.key) {
-    case 'ArrowUp': player.move('up'); break;
-    case 'ArrowDown': player.move('down'); break;
-    case 'ArrowLeft': player.move('left'); break;
-    case 'ArrowRight': player.move('right'); break;
+    case "ArrowUp":
+      player.move("up");
+      break;
+    case "ArrowDown":
+      player.move("down");
+      break;
+    case "ArrowLeft":
+      player.move("left");
+      break;
+    case "ArrowRight":
+      player.move("right");
+      break;
   }
   updateDisplay();
 });
 
 function updateDisplay() {
   // clear previous display
-  gameContainer.innerHTML = '';
-  
+  gameContainer.innerHTML = "";
+
   // create grid cells
   for (let y = 0; y < GRID_SIZE; y++) {
     for (let x = 0; x < GRID_SIZE; x++) {
-      const cell = document.createElement('div');
-      cell.className = 'grid-cell';
-      
+      const cell = document.createElement("div");
+      cell.className = "grid-cell";
+
       // add player if position matches
       const playerPos = player.getPosition();
       if (playerPos.x === x && playerPos.y === y) {
-        const playerElement = document.createElement('div');
-        playerElement.className = 'player';
+        const playerElement = document.createElement("div");
+        playerElement.className = "player";
         cell.appendChild(playerElement);
       }
-      
+
       gameContainer.appendChild(cell);
     }
   }

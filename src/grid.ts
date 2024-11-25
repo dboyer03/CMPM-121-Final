@@ -1,6 +1,6 @@
-// grid 
+// grid
 
-import { Position } from './position.ts';
+import { Position } from "./position.ts";
 
 export class Grid {
   private width: number;
@@ -14,8 +14,8 @@ export class Grid {
   }
 
   isValidPosition(pos: Position): boolean {
-    return pos.x >= 0 && pos.x < this.width && 
-           pos.y >= 0 && pos.y < this.height;
+    return pos.x >= 0 && pos.x < this.width &&
+      pos.y >= 0 && pos.y < this.height;
   }
 
   getKey(pos: Position): string {

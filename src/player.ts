@@ -1,7 +1,7 @@
 // player
 
-import { Position } from './position.ts';
-import { Grid } from './grid.ts';
+import { Position } from "./position.ts";
+import { Grid } from "./grid.ts";
 
 export class Player {
   private position: Position;
@@ -12,14 +12,22 @@ export class Player {
     this.position = startPos;
   }
 
-  move(direction: 'up' | 'down' | 'left' | 'right'): boolean {
+  move(direction: "up" | "down" | "left" | "right"): boolean {
     const newPos: Position = { ...this.position };
-    
+
     switch (direction) {
-      case 'up': newPos.y--; break;
-      case 'down': newPos.y++; break;
-      case 'left': newPos.x--; break;
-      case 'right': newPos.x++; break;
+      case "up":
+        newPos.y--;
+        break;
+      case "down":
+        newPos.y++;
+        break;
+      case "left":
+        newPos.x--;
+        break;
+      case "right":
+        newPos.x++;
+        break;
     }
 
     if (this.grid.isValidPosition(newPos)) {
