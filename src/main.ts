@@ -54,28 +54,29 @@ document.addEventListener("keydown", (e) => {
 
 function updateDisplay() {
   gameContainer.innerHTML = "";
-  
+
   for (let y = 0; y < GRID_SIZE; y++) {
     for (let x = 0; x < GRID_SIZE; x++) {
       const cell = document.createElement("div");
       cell.className = "grid-cell";
       const pos = { x, y };
-      
+
       const plant = grid.getPlant(pos);
       if (plant) {
         const plantElement = document.createElement("div");
-        plantElement.className = `plant type-${plant.type} level-${plant.growthLevel}`;
+        plantElement.className =
+          `plant type-${plant.type} level-${plant.growthLevel}`;
         cell.appendChild(plantElement);
       }
 
       // add click handlers for plant interactions
-      cell.addEventListener('contextmenu', (e) => {
+      cell.addEventListener("contextmenu", (e) => {
         e.preventDefault(); // prevent default right-click menu
         player.interactWithPlant(PlantAction.REAP, pos);
         updateDisplay();
       });
 
-      cell.addEventListener('click', (e) => {
+      cell.addEventListener("click", (e) => {
         player.interactWithPlant(PlantAction.SOW, pos);
         updateDisplay();
       });
