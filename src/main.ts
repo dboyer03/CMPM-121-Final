@@ -3,6 +3,7 @@
 import "./style.css";
 import { Grid } from "./grid.ts";
 import { Player } from "./player.ts";
+import { GameState } from "./state.ts";
 
 const GAME_NAME = "CMPM 121 Final Project - Group 33";
 const GRID_SIZE = 10;
@@ -12,6 +13,7 @@ document.title = GAME_NAME;
 
 const grid = new Grid(GRID_SIZE, GRID_SIZE);
 const player = new Player(grid, { x: 0, y: 0 });
+const gameState = new GameState();
 
 // setup game display
 const gameContainer = document.createElement("div");
@@ -28,17 +30,21 @@ updateDisplay();
 
 // add keyboard controls
 document.addEventListener("keydown", (e) => {
-  switch (e.key) {
-    case "ArrowUp":
+  switch (e.key.toLowerCase()) {
+    case "arrowup":
+    case "w":
       player.move("up");
       break;
-    case "ArrowDown":
+    case "arrowdown":
+    case "s":
       player.move("down");
       break;
-    case "ArrowLeft":
+    case "arrowleft":
+    case "a":
       player.move("left");
       break;
-    case "ArrowRight":
+    case "arrowright":
+    case "d":
       player.move("right");
       break;
   }
@@ -67,3 +73,33 @@ function updateDisplay() {
     }
   }
 }
+
+// day controls
+const dayControls = document.createElement("div");
+dayControls.className = "controls";
+
+const dayCounter = document.createElement("div");
+dayCounter.textContent = `Day: ${gameState.getCurrentDay()}`;
+dayCounter.style.marginBottom = "10px";
+
+const advanceDayButton = document.createElement("button");
+advanceDayButton.textContent = "Next Day";
+advanceDayButton.onclick = () => {
+  gameState.advanceDay();
+  dayCounter.textContent = `Day: ${gameState.getCurrentDay()}`;
+  updateDisplay();
+};
+
+dayControls.appendChild(dayCounter);
+dayControls.appendChild(advanceDayButton);
+
+// include controls
+const gameWrapper = document.createElement("div");
+gameWrapper.style.display = "flex";
+gameWrapper.style.flexDirection = "column";
+gameWrapper.style.alignItems = "center";
+gameWrapper.appendChild(gameContainer);
+gameWrapper.appendChild(dayControls);
+
+// game wrapper
+app.appendChild(gameWrapper);
