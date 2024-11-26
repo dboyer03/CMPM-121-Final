@@ -4,6 +4,7 @@ import "./style.css";
 import { Grid } from "./grid.ts";
 import { Player } from "./player.ts";
 import { GameState } from "./state.ts";
+import { PlantAction } from "./plant.ts";
 
 const GAME_NAME = "CMPM 121 Final Project - Group 33";
 const GRID_SIZE = 10;
@@ -52,14 +53,32 @@ document.addEventListener("keydown", (e) => {
 });
 
 function updateDisplay() {
-  // clear previous display
   gameContainer.innerHTML = "";
-
-  // create grid cells
+  
   for (let y = 0; y < GRID_SIZE; y++) {
     for (let x = 0; x < GRID_SIZE; x++) {
       const cell = document.createElement("div");
       cell.className = "grid-cell";
+      const pos = { x, y };
+      
+      const plant = grid.getPlant(pos);
+      if (plant) {
+        const plantElement = document.createElement("div");
+        plantElement.className = `plant type-${plant.type} level-${plant.growthLevel}`;
+        cell.appendChild(plantElement);
+      }
+
+      // add click handlers for plant interactions
+      cell.addEventListener('contextmenu', (e) => {
+        e.preventDefault(); // prevent default right-click menu
+        player.interactWithPlant(PlantAction.REAP, pos);
+        updateDisplay();
+      });
+
+      cell.addEventListener('click', (e) => {
+        player.interactWithPlant(PlantAction.SOW, pos);
+        updateDisplay();
+      });
 
       // add player if position matches
       const playerPos = player.getPosition();

@@ -67,3 +67,19 @@ button:hover {
   margin-top: 20px;
   text-align: center;
 }
+
+.plant {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #4CAF50;
+  position: absolute;
+}
+
+.plant.type-1 { background-color: #4CAF50; }
+.plant.type-2 { background-color: #FFC107; }
+.plant.type-3 { background-color: #9C27B0; }
+
+.plant.level-1 { transform: scale(0.6); }
+.plant.level-2 { transform: scale(0.8); }
+.plant.level-3 { transform: scale(1); }

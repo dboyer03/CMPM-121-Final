@@ -2,6 +2,7 @@
 
 import { Position } from "./position.ts";
 import { Grid } from "./grid.ts";
+import { PlantAction } from "./plant.ts";
 
 export class Player {
   private position: Position;
@@ -39,5 +40,17 @@ export class Player {
 
   getPosition(): Position {
     return { ...this.position };
+  }
+
+  interactWithPlant(action: PlantAction, targetPos: Position): boolean {
+    if (!this.grid.isWithinRange(this.position, targetPos)) {
+      return false;
+    }
+
+    if (action === PlantAction.SOW) {
+      return this.grid.sowPlant(targetPos, 1); // plant type 1
+    } else {
+      return this.grid.reapPlant(targetPos) !== null;
+    }
   }
 }
