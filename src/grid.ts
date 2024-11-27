@@ -1,7 +1,7 @@
 // grid
 
 import { Position } from "./position.ts";
-import { Plant } from "./plant.ts";
+import { Plant, PlantType } from "./plant.ts";
 import { Cell } from "./cell.ts";
 
 export class Grid {
@@ -71,10 +71,13 @@ export class Grid {
     return dx <= this.INTERACTION_RANGE && dy <= this.INTERACTION_RANGE;
   }
 
-  sowPlant(pos: Position, type: number): boolean {
+  sowPlant(pos: Position, type: PlantType): boolean {
     const key = this.getKey(pos);
     if (!this.plants.has(key)) {
-      this.plants.set(key, { type, growthLevel: 1 });
+      this.plants.set(key, {
+        type,
+        growthLevel: 1
+      });
       return true;
     }
     return false;

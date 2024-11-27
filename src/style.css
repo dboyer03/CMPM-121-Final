@@ -114,41 +114,42 @@ button:hover {
   width: 20px;
   height: 20px;
   position: absolute;
+  transition: all 0.3s ease;
 }
 
 .plant.type-1 {
-  background-color: #4caf50;
+  background-color: #4CAF50; 
+  border-radius: 50%; 
 }
+
 .plant.type-2 {
-  background-color: #ffc107;
-}
-.plant.type-3 {
-  background-color: #9c27b0;
-}
-
-/* Level 1: Circle */
-.plant.level-1 {
-  background-color: #4caf50;
-  border-radius: 50%; /* Makes it a circle */
-}
-
-/* Level 2: Triangle */
-.plant.level-2 {
-  background-color: transparent;
   width: 0;
   height: 0;
+  background-color: transparent;
   border-left: 10px solid transparent;
   border-right: 10px solid transparent;
-  border-bottom: 20px solid #ffc107; /* Creates a triangle */
-  border-radius: 0; /* Ensures no circular edges */
+  border-bottom: 20px solid #FFC107; 
 }
 
-/* Level 3: Square */
+.plant.type-3 {
+  background-color: #9C27B0; 
+  border-radius: 0;
+}
+
+/* growth levels */
+.plant.level-1 {
+  transform: scale(0.6);
+  filter: brightness(1);
+}
+
+.plant.level-2 {
+  transform: scale(0.8);
+  filter: brightness(0.9);
+}
+
 .plant.level-3 {
-  background-color: #9c27b0;
-  border-radius: 0; /* Ensures no circular edges */
-  width: 20px;
-  height: 20px;
+  transform: scale(1);
+  filter: brightness(0.8);
 }
 
 .cell-stats {
