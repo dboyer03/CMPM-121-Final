@@ -33,11 +33,53 @@ h1 {
   width: 32px;
   height: 32px;
   background: #8b4513;
-  border: 1px solid #3d1f09;
   box-sizing: border-box;
   display: flex;
   justify-content: center;
   align-items: center;
+  position: relative;
+}
+
+.water-segment {
+  position: absolute;
+  background: #4aa0ff;
+  width: 4px;
+  height: 2px;
+  top: 0;
+}
+
+.water-segment.segment-0 {
+  left: 2px;
+}
+.water-segment.segment-1 {
+  left: 8px;
+}
+.water-segment.segment-2 {
+  left: 14px;
+}
+.water-segment.segment-3 {
+  left: 20px;
+}
+.water-segment.segment-4 {
+  left: 26px;
+}
+
+.sun-segment {
+  position: absolute;
+  background: #fbde3d;
+  width: 2px;
+  height: 4px;
+  left: 0;
+}
+
+.sun-segment.segment-0 {
+  bottom: 8px;
+}
+.sun-segment.segment-1 {
+  bottom: 14px;
+}
+.sun-segment.segment-2 {
+  bottom: 20px;
 }
 
 .player {
@@ -107,5 +149,14 @@ button:hover {
   border-radius: 0; /* Ensures no circular edges */
   width: 20px;
   height: 20px;
+}
+
+.cell-stats {
+  position: absolute;
+  font-size: 8px;
+  top: 1px;
+  left: 1px;
+  pointer-events: none;
+  text-shadow: 1px 1px 0 white;
 }
 
