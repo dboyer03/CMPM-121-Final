@@ -19,9 +19,9 @@ const gameState = new GameState();
 // ====== DOM Container ======
 const gameLayout = document.createElement("div");
 gameLayout.style.display = "flex";
-gameLayout.style.flexDirection = "column"; // Stack items vertically
-gameLayout.style.alignItems = "center"; // Center-align horizontally
-gameLayout.style.gap = "10px"; // Add spacing between elements
+gameLayout.style.flexDirection = "column"; 
+gameLayout.style.alignItems = "center"; 
+gameLayout.style.gap = "10px"; 
 
 // ====== Game Grid ======
 const gameContainer = document.createElement("div");
@@ -30,9 +30,7 @@ gameContainer.style.gridTemplateColumns = `repeat(${GRID_SIZE}, 32px)`;
 gameContainer.style.gap = "1px";
 gameContainer.style.backgroundColor = "#ccc";
 
-gameLayout.appendChild(gameContainer);  // Grid is added below the buttons
-
-// Create initial display
+gameLayout.appendChild(gameContainer);  
 updateDisplay();
 
 // ====== Day Button ======
@@ -123,7 +121,6 @@ function updateDisplay() {
 }
 
 function advanceDayPlant() {
-  // Iterate through all cells in the grid
   for (let y = 0; y < GRID_SIZE; y++) {
     for (let x = 0; x < GRID_SIZE; x++) {
       const plant = grid.getPlant({ x, y });
