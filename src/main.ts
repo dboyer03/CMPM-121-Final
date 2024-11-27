@@ -14,7 +14,7 @@ document.title = GAME_NAME;
 
 const grid = new Grid(GRID_SIZE, GRID_SIZE);
 const player = new Player(grid, { x: 0, y: 0 });
-const gameState = new GameState();
+const gameState = new GameState(grid);
 
 // setup game display
 const gameContainer = document.createElement("div");
@@ -60,6 +60,24 @@ function updateDisplay() {
       const cell = document.createElement("div");
       cell.className = "grid-cell";
       const pos = { x, y };
+
+      const cellProperties = grid.getCellProperties(pos);
+
+      // water segments (top o cell)
+      for (let i = 0; i < cellProperties.water; i++) {
+        const segment = document.createElement("div");
+        segment.className = "water-segment";
+        segment.classList.add(`segment-${i}`);
+        cell.appendChild(segment);
+      }
+
+      // sun segments (bottom o cell)
+      for (let i = 0; i < cellProperties.sunlight; i++) {
+        const segment = document.createElement("div");
+        segment.className = "sun-segment";
+        segment.classList.add(`segment-${i}`);
+        cell.appendChild(segment);
+      }
 
       const plant = grid.getPlant(pos);
       if (plant) {
