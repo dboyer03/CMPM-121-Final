@@ -48,13 +48,12 @@ advanceDayButton.textContent = "Next Day";
 advanceDayButton.onclick = () => {
   gameState.advanceDay();
   dayCounter.textContent = `Day: ${gameState.getCurrentDay()}`;
+  advanceDayPlant();
   updateDisplay();
 };
 
 dayControls.appendChild(dayCounter);
 dayControls.appendChild(advanceDayButton);
-
-// Add day controls below the grid
 gameLayout.appendChild(dayControls);
 
 // ====== Keyboard Listeners ======
@@ -80,6 +79,7 @@ document.addEventListener("keydown", (e) => {
   updateDisplay();
 });
 
+// ====== Functions ======
 function updateDisplay() {
   gameContainer.innerHTML = "";
 
@@ -121,5 +121,20 @@ function updateDisplay() {
     }
   }
 }
+
+function advanceDayPlant() {
+  // Iterate through all cells in the grid
+  for (let y = 0; y < GRID_SIZE; y++) {
+    for (let x = 0; x < GRID_SIZE; x++) {
+      const plant = grid.getPlant({ x, y });
+      if (plant) {
+        if (plant.growthLevel < 3) {
+          plant.growthLevel++;
+        }
+      }
+    }
+  }
+}
+
 
 app.appendChild(gameLayout);

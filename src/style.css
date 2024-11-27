@@ -71,8 +71,6 @@ button:hover {
 .plant {
   width: 20px;
   height: 20px;
-  border-radius: 50%;
-  background-color: #4caf50;
   position: absolute;
 }
 
@@ -86,12 +84,28 @@ button:hover {
   background-color: #9c27b0;
 }
 
+/* Level 1: Circle */
 .plant.level-1 {
-  transform: scale(0.6);
+  background-color: #4caf50;
+  border-radius: 50%; /* Makes it a circle */
 }
+
+/* Level 2: Triangle */
 .plant.level-2 {
-  transform: scale(0.8);
+  background-color: transparent;
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 20px solid #ffc107; /* Creates a triangle */
+  border-radius: 0; /* Ensures no circular edges */
 }
+
+/* Level 3: Square */
 .plant.level-3 {
-  transform: scale(1);
+  background-color: #9c27b0;
+  border-radius: 0; /* Ensures no circular edges */
+  width: 20px;
+  height: 20px;
 }
+
