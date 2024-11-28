@@ -1,7 +1,7 @@
 // grid
 
 import { Position } from "./position.ts";
-import { Plant, PlantType } from "./plant.ts";
+import { canGrow, Plant, PlantTypeInfo } from "./plant.ts";
 import { Cell } from "./cell.ts";
 
 export class Grid {
@@ -11,7 +11,8 @@ export class Grid {
   private cells: Map<string, Cell>;
   private readonly INTERACTION_RANGE = 1; // adjacent cell range
   private readonly MAX_WATER = 5; // max water
-  private readonly WATER_RETENTION = 1; // % water retention
+  private readonly MAX_RAIN = 2; // max water increase per tick
+  private readonly MIN_WATER_RETENTION = 0.5; // % water retention
   private readonly MAX_SUNLIGHT = 3; // max sunlight
 
   constructor(width: number, height: number) {
@@ -40,21 +41,25 @@ export class Grid {
         const cell = this.cells.get(key)!;
         const plant = this.plants.get(key);
 
-        // generate water
-        const newWater = Math.floor(Math.random() * 4);
-        const newSunlight = Math.floor(Math.random() * 4);
-
-        // subtract water for plant level
-        const waterUsage = plant ? plant.growthLevel : 0;
-
-        // update water
-        cell.water = Math.max(
-          0,
-          Math.min(this.MAX_WATER, cell.water + newWater - waterUsage),
-        );
+        // update water (rain)
+        if (cell.water < this.MAX_WATER) {
+          cell.water = Math.min(
+            Math.round(
+              cell.water * Math.min(Math.random(), this.MIN_WATER_RETENTION),
+            ) +
+              Math.ceil(Math.random() * this.MAX_RAIN),
+            this.MAX_WATER,
+          );
+        }
 
         // update sunlight
-        cell.sunlight = newSunlight;
+        cell.sunlight = Math.floor(Math.random() * (this.MAX_SUNLIGHT + 1));
+
+        // update plant growth
+        if (plant && canGrow(plant, cell.water, cell.sunlight)) {
+          plant.growthLevel++;
+          cell.water -= PlantTypeInfo[plant.type].waterToGrow;
+        }
 
         this.cells.set(key, cell);
       }
@@ -71,13 +76,16 @@ export class Grid {
     return dx <= this.INTERACTION_RANGE && dy <= this.INTERACTION_RANGE;
   }
 
-  sowPlant(pos: Position, type: PlantType): boolean {
+  sowPlant(pos: Position, type: string): boolean {
     const key = this.getKey(pos);
-    if (!this.plants.has(key)) {
-      this.plants.set(key, {
-        type,
-        growthLevel: 1,
-      });
+    const cell = this.getCellProperties(pos);
+    const plant = {
+      type,
+      growthLevel: 1,
+    };
+    if (!this.plants.has(key) && canGrow(plant, cell.water, cell.sunlight)) {
+      this.plants.set(key, plant);
+      cell.water -= PlantTypeInfo[type].waterToGrow;
       return true;
     }
     return false;
@@ -86,7 +94,7 @@ export class Grid {
   reapPlant(pos: Position): Plant | null {
     const key = this.getKey(pos);
     const plant = this.plants.get(key);
-    if (plant) {
+    if (plant && plant.growthLevel === PlantTypeInfo[plant.type].maxGrowth) {
       this.plants.delete(key);
       return plant;
     }

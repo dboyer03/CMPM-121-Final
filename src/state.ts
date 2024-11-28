@@ -3,12 +3,13 @@
 import { Grid } from "./grid.ts";
 
 export class GameState {
-  private dayCount: number = 0;
+  private dayCount: number;
   private grid: Grid;
 
   constructor(grid: Grid) {
-    this.dayCount = 0;
+    this.dayCount = 1;
     this.grid = grid;
+    this.grid.updateEnvironment();
   }
 
   advanceDay(): void {

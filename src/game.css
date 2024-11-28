@@ -99,12 +99,12 @@ button:hover {
   transition: all 0.3s ease;
 }
 
-.plant.type-1 {
+.plant.type-green-circle {
   background-color: #4caf50;
   border-radius: 50%;
 }
 
-.plant.type-2 {
+.plant.type-yellow-triangle {
   width: 0;
   height: 0;
   background-color: transparent;
@@ -113,7 +113,7 @@ button:hover {
   border-bottom: 20px solid #ffc107;
 }
 
-.plant.type-3 {
+.plant.type-purple-square {
   background-color: #9c27b0;
   border-radius: 0;
 }
