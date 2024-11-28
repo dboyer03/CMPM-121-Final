@@ -2,7 +2,7 @@
 import { Grid } from "./grid.ts";
 import { Player } from "./player.ts";
 import { GameState } from "./state.ts";
-import { PlantAction } from "./plant.ts";
+import { PlantAction, PlantType } from "./plant.ts";
 
 import "./style.css";
 import "./game.css";
@@ -133,6 +133,7 @@ const controls: { [key: string]: string } = {
   "Left Click": "Sow a nearby plant",
   "Right Click": "Reap a nearby plant",
   "WASD / Arrow Keys": "Move player",
+  "1/2/3": "Switch plant type",
 };
 
 instructions.innerHTML = "<h2>Instructions</h2><hr>";
@@ -146,26 +147,63 @@ instructions.appendChild(description);
 
 // ====== Keyboard Listeners ======
 document.addEventListener("keydown", (e) => {
-  switch (e.key.toLowerCase()) {
-    case "arrowup":
+  switch (e.key) {
+    case "ArrowUp":
     case "w":
       player.move("up");
+      updateGrid();
       break;
-    case "arrowdown":
+    case "ArrowDown":
     case "s":
       player.move("down");
+      updateGrid();
       break;
-    case "arrowleft":
+    case "ArrowLeft":
     case "a":
       player.move("left");
+      updateGrid();
       break;
-    case "arrowright":
+    case "ArrowRight":
     case "d":
       player.move("right");
+      updateGrid();
+      break;
+    case "1":
+    case "num1":
+      player.setPlantType(PlantType.GREEN_CIRCLE);
+      updateHUD();
+      break;
+    case "2":
+    case "num2":
+      player.setPlantType(PlantType.YELLOW_TRIANGLE);
+      updateHUD();
+      break;
+    case "3":
+    case "num3":
+      player.setPlantType(PlantType.PURPLE_SQUARE);
+      updateHUD();
       break;
   }
-  updateGrid();
 });
+
+function updateHUD() {
+  const plantTypeDisplay = document.querySelector(".current-plant-type");
+  if (plantTypeDisplay) {
+    const typeNames = {
+      [PlantType.GREEN_CIRCLE]: "Green Circle",
+      [PlantType.YELLOW_TRIANGLE]: "Yellow Triangle",
+      [PlantType.PURPLE_SQUARE]: "Purple Square"
+    };
+    const typeName = typeNames[player.getCurrentPlantType()];
+    plantTypeDisplay.textContent = `Current Plant: ${typeName}`;
+  }
+}
+
+const plantTypeDisplay = document.createElement("div");
+plantTypeDisplay.className = "current-plant-type";
+const initialTypeName = "Green Circle"; // default plant type
+plantTypeDisplay.textContent = `Current Plant: ${initialTypeName}`;
+gameHud.appendChild(plantTypeDisplay);
 
 // ====== Initialize DOM display ======
 app.appendChild(title);

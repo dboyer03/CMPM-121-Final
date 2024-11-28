@@ -7,6 +7,7 @@ import { PlantAction, PlantType } from "./plant.ts";
 export class Player {
   private position: Position;
   private grid: Grid;
+  private currentPlantType: PlantType = PlantType.GREEN_CIRCLE; 
 
   constructor(grid: Grid, startPos: Position) {
     this.grid = grid;
@@ -42,13 +43,21 @@ export class Player {
     return { ...this.position };
   }
 
+  setPlantType(type: PlantType) {
+    this.currentPlantType = type;
+  }
+
+  getCurrentPlantType(): PlantType {
+    return this.currentPlantType;
+  }
+
   interactWithPlant(action: PlantAction, targetPos: Position): boolean {
     if (!this.grid.isWithinRange(this.position, targetPos)) {
       return false;
     }
 
     if (action === PlantAction.SOW) {
-      return this.grid.sowPlant(targetPos, PlantType.GREEN_CIRCLE);
+      return this.grid.sowPlant(targetPos, this.currentPlantType);
     } else {
       return this.grid.reapPlant(targetPos) !== null;
     }
