@@ -48,7 +48,7 @@ export class Player {
     }
 
     if (action === PlantAction.SOW) {
-      return this.grid.sowPlant(targetPos, PlantType.GREEN_CIRCLE); 
+      return this.grid.sowPlant(targetPos, PlantType.GREEN_CIRCLE);
     } else {
       return this.grid.reapPlant(targetPos) !== null;
     }
