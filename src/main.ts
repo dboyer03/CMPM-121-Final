@@ -80,6 +80,7 @@ function updateGridDisplay() {
       if (playerPos.x === x && playerPos.y === y) {
         const playerElement = document.createElement("div");
         playerElement.className = "player";
+        playerElement.innerText = "👨‍🌾";
         cell.appendChild(playerElement);
       }
 
@@ -121,7 +122,7 @@ const controls: { [key: string]: string } = {
   "Left Click": "Sow a nearby plant",
   "Right Click": "Reap a nearby plant",
   "WASD / Arrow Keys": "Move player",
-  "1/2/3": "Switch plant type",
+  "1 / 2 / 3": "Switch plant type",
 };
 
 instructions.innerHTML = "<h2>Instructions</h2><hr>";
@@ -130,8 +131,17 @@ for (const [input, action] of Object.entries(controls)) {
 }
 
 // TODO: Describe mechanics and limitations (e.g. player reach, plant growth, water/sunlight, etc.)
-description.innerText = "Plant seeds, water them, and watch them grow!";
+description.innerText = `Click the cells current or adjacent to the farmer to sow or reap plants. Click the Next Day button to advance the day.`;
 instructions.appendChild(description);
+{
+  let i = 1;
+  for (const info in PlantTypeInfo) {
+    instructions.innerHTML += `<p><strong>(${i}) ${PlantTypeInfo[info].name}</strong>:<br>
+      To Grow: ${PlantTypeInfo[info].waterToGrow} water, ${PlantTypeInfo[info].sunToGrow} sunlight<br>
+      Can sow at level ${PlantTypeInfo[info].maxGrowth}</p>`;
+    i++;
+  }
+}
 
 // ====== Keyboard Listeners ======
 document.addEventListener("keydown", (e) => {

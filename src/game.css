@@ -70,6 +70,9 @@
   width: 24px;
   height: 24px;
   border: 1px solid black;
+  font-size: 14px;
+  text-align: center;
+  line-height: 24px;
 }
 
 button {
