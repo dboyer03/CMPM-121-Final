@@ -7,26 +7,37 @@ export interface PlantType {
   maxGrowth: number;
   waterToGrow: number;
   sunToGrow: number;
+  maxCrowding: number;
 }
 
 export const PlantTypeInfo: { [key: string]: PlantType } = {
   "green-circle": {
     name: "Green Circle",
-    waterToGrow: 2,
     maxGrowth: MAX_GROWTH,
+    waterToGrow: 2,
     sunToGrow: 2,
+    maxCrowding: 8,
   },
   "yellow-triangle": {
     name: "Yellow Triangle",
-    waterToGrow: 1,
     maxGrowth: MAX_GROWTH,
+    waterToGrow: 1,
     sunToGrow: 3,
+    maxCrowding: 2,
   },
   "purple-square": {
     name: "Purple Square",
-    waterToGrow: 3,
     maxGrowth: MAX_GROWTH,
+    waterToGrow: 3,
     sunToGrow: 1,
+    maxCrowding: 4,
+  },
+  "withered": {
+    name: "withered",
+    maxGrowth: 1,
+    waterToGrow: Infinity,
+    sunToGrow: Infinity,
+    maxCrowding: Infinity,
   },
 };
 
@@ -38,13 +49,6 @@ export enum PlantAction {
 export interface Plant {
   type: string;
   growthLevel: number;
-}
-
-export function createPlant(type: string): Plant {
-  return {
-    type,
-    growthLevel: 0,
-  };
 }
 
 export function canGrow(

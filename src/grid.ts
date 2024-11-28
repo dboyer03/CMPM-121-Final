@@ -55,10 +55,18 @@ export class Grid {
         // update sunlight
         cell.sunlight = Math.floor(Math.random() * (this.MAX_SUNLIGHT + 1));
 
-        // update plant growth
-        if (plant && canGrow(plant, cell.water, cell.sunlight)) {
-          plant.growthLevel++;
-          cell.water -= PlantTypeInfo[plant.type].waterToGrow;
+        // update plant
+        if (plant) {
+          // update plant growth
+          if (canGrow(plant, cell.water, cell.sunlight)) {
+            plant.growthLevel++;
+            cell.water -= PlantTypeInfo[plant.type].waterToGrow;
+          }
+
+          // check for crowding
+          if (this.countAdjacentPlants(pos) > PlantTypeInfo[plant.type].maxCrowding) {
+            this.plants.set(key, { type: "withered", growthLevel: 1 });
+          }
         }
 
         this.cells.set(key, cell);
@@ -101,6 +109,10 @@ export class Grid {
     return null;
   }
 
+  getKey(pos: Position): string {
+    return `${pos.x},${pos.y}`;
+  }
+
   getPlant(pos: Position): Plant | undefined {
     return this.plants.get(this.getKey(pos));
   }
@@ -110,7 +122,17 @@ export class Grid {
       pos.y >= 0 && pos.y < this.height;
   }
 
-  getKey(pos: Position): string {
-    return `${pos.x},${pos.y}`;
+  countAdjacentPlants(pos: Position): number {
+    let count = 0;
+    for (let y = pos.y - 1; y <= pos.y + 1; y++) {
+      for (let x = pos.x - 1; x <= pos.x + 1; x++) {
+        if (this.isValidPosition({ x, y }) &&
+            !(x === pos.x && y === pos.y) &&
+            this.getPlant({ x, y })) {
+          count++;
+        }
+      }
+    }
+    return count
   }
 }

@@ -131,13 +131,19 @@ for (const [input, action] of Object.entries(controls)) {
 }
 
 // TODO: Describe mechanics and limitations (e.g. player reach, plant growth, water/sunlight, etc.)
-description.innerText = `Click the cells current or adjacent to the farmer to sow or reap plants. Click the Next Day button to advance the day.`;
+description.innerText =
+  `Click the cells current or adjacent to the farmer to sow or reap plants. Click the Next Day button to advance the day. Plants require water and sunlight to grow. Different plants have different requirements (see below). Don't overcrowd plants or they will die.`;
 instructions.appendChild(description);
 {
   let i = 1;
   for (const info in PlantTypeInfo) {
-    instructions.innerHTML += `<p><strong>(${i}) ${PlantTypeInfo[info].name}</strong>:<br>
-      To Grow: ${PlantTypeInfo[info].waterToGrow} water, ${PlantTypeInfo[info].sunToGrow} sunlight<br>
+    instructions.innerHTML += `<p><strong>(${i}) ${
+      PlantTypeInfo[info].name
+    }</strong>:<br>
+      To Grow: ${PlantTypeInfo[info].waterToGrow} water,
+      ${ PlantTypeInfo[info].sunToGrow } sunlight,
+      ${ PlantTypeInfo[info].maxCrowding } maximum adjacent plants
+    <br>
       Can sow at level ${PlantTypeInfo[info].maxGrowth}</p>`;
     i++;
   }
