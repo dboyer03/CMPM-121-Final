@@ -76,7 +76,7 @@ export class Grid {
     if (!this.plants.has(key)) {
       this.plants.set(key, {
         type,
-        growthLevel: 1
+        growthLevel: 1,
       });
       return true;
     }

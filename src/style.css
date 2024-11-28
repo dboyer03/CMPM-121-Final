@@ -15,150 +15,17 @@ body {
   color: var(--text-color);
 }
 
+h1 {
+  text-align: center;
+  font-size: 2em;
+  color: var(--primary-color);
+}
+
 #app {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
   min-height: 100vh;
   margin: 0;
   padding: 20px;
 }
-
-h1 {
-  font-size: 2em;
-  color: var(--primary-color);
-}
-
-.grid-cell {
-  width: 32px;
-  height: 32px;
-  background: #8b4513;
-  box-sizing: border-box;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-}
-
-.water-segment {
-  position: absolute;
-  background: #4aa0ff;
-  width: 4px;
-  height: 2px;
-  top: 0;
-}
-
-.water-segment.segment-0 {
-  left: 2px;
-}
-.water-segment.segment-1 {
-  left: 8px;
-}
-.water-segment.segment-2 {
-  left: 14px;
-}
-.water-segment.segment-3 {
-  left: 20px;
-}
-.water-segment.segment-4 {
-  left: 26px;
-}
-
-.sun-segment {
-  position: absolute;
-  background: #fbde3d;
-  width: 2px;
-  height: 4px;
-  left: 0;
-}
-
-.sun-segment.segment-0 {
-  bottom: 8px;
-}
-.sun-segment.segment-1 {
-  bottom: 14px;
-}
-.sun-segment.segment-2 {
-  bottom: 20px;
-}
-
-.player {
-  background: rgb(255, 255, 255);
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  border: 1px solid black;
-}
-
-button {
-  padding: 8px 16px;
-  margin: 8px;
-  font-size: 16px;
-  cursor: pointer;
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  border-radius: 4px;
-}
-
-button:hover {
-  background-color: #45a049;
-}
-
-.controls {
-  margin-top: 20px;
-  text-align: center;
-}
-
-.plant {
-  width: 20px;
-  height: 20px;
-  position: absolute;
-  transition: all 0.3s ease;
-}
-
-.plant.type-1 {
-  background-color: #4CAF50; 
-  border-radius: 50%; 
-}
-
-.plant.type-2 {
-  width: 0;
-  height: 0;
-  background-color: transparent;
-  border-left: 10px solid transparent;
-  border-right: 10px solid transparent;
-  border-bottom: 20px solid #FFC107; 
-}
-
-.plant.type-3 {
-  background-color: #9C27B0; 
-  border-radius: 0;
-}
-
-/* growth levels */
-.plant.level-1 {
-  transform: scale(0.6);
-  filter: brightness(1);
-}
-
-.plant.level-2 {
-  transform: scale(0.8);
-  filter: brightness(0.9);
-}
-
-.plant.level-3 {
-  transform: scale(1);
-  filter: brightness(0.8);
-}
-
-.cell-stats {
-  position: absolute;
-  font-size: 8px;
-  top: 1px;
-  left: 1px;
-  pointer-events: none;
-  text-shadow: 1px 1px 0 white;
-}
-
-

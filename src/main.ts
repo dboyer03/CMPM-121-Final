@@ -1,85 +1,35 @@
 // ====== Main + Imports ======
-import "./style.css";
 import { Grid } from "./grid.ts";
 import { Player } from "./player.ts";
 import { GameState } from "./state.ts";
 import { PlantAction } from "./plant.ts";
+
+import "./style.css";
+import "./game.css";
 
 // ====== Consts ======
 const GAME_NAME = "CMPM 121 Final Project - Group 33";
 const GRID_SIZE = 10;
 
 const app = document.querySelector<HTMLDivElement>("#app")!;
-document.title = GAME_NAME;
 
+// ====== Title ======
+document.title = GAME_NAME;
+const title = document.createElement("h1");
+title.innerText = GAME_NAME;
+
+// ====== Game State ======
 const grid = new Grid(GRID_SIZE, GRID_SIZE);
 const player = new Player(grid, { x: 0, y: 0 });
 const gameState = new GameState(grid);
 
-// ====== DOM Container ======
-const gameLayout = document.createElement("div");
-gameLayout.style.display = "flex";
-gameLayout.style.flexDirection = "column"; 
-gameLayout.style.alignItems = "center"; 
-gameLayout.style.gap = "10px"; 
-
 // ====== Game Grid ======
-const gameContainer = document.createElement("div");
-gameContainer.style.display = "grid";
-gameContainer.style.gridTemplateColumns = `repeat(${GRID_SIZE}, 32px)`;
-gameContainer.style.gap = "1px";
-gameContainer.style.backgroundColor = "#ccc";
+const gameGrid = document.createElement("div");
+gameGrid.id = "game-grid";
+gameGrid.style.gridTemplateColumns = `repeat(${GRID_SIZE}, 32px)`;
 
-gameLayout.appendChild(gameContainer);  
-updateDisplay();
-
-// ====== Day Button ======
-const dayControls = document.createElement("div");
-dayControls.className = "controls";
-
-const dayCounter = document.createElement("div");
-dayCounter.textContent = `Day: ${gameState.getCurrentDay()}`;
-dayCounter.style.marginBottom = "10px";
-
-const advanceDayButton = document.createElement("button");
-advanceDayButton.textContent = "Next Day";
-advanceDayButton.onclick = () => {
-  gameState.advanceDay();
-  dayCounter.textContent = `Day: ${gameState.getCurrentDay()}`;
-  advanceDayPlant();
-  updateDisplay();
-};
-
-dayControls.appendChild(dayCounter);
-dayControls.appendChild(advanceDayButton);
-gameLayout.appendChild(dayControls);
-
-// ====== Keyboard Listeners ======
-document.addEventListener("keydown", (e) => {
-  switch (e.key.toLowerCase()) {
-    case "arrowup":
-    case "w":
-      player.move("up");
-      break;
-    case "arrowdown":
-    case "s":
-      player.move("down");
-      break;
-    case "arrowleft":
-    case "a":
-      player.move("left");
-      break;
-    case "arrowright":
-    case "d":
-      player.move("right");
-      break;
-  }
-  updateDisplay();
-});
-
-// ====== Functions ======
-function updateDisplay() {
-  gameContainer.innerHTML = "";
+function updateGrid() {
+  gameGrid.innerHTML = "";
 
   for (let y = 0; y < GRID_SIZE; y++) {
     for (let x = 0; x < GRID_SIZE; x++) {
@@ -117,12 +67,12 @@ function updateDisplay() {
       cell.addEventListener("contextmenu", (e) => {
         e.preventDefault(); // prevent default right-click menu
         player.interactWithPlant(PlantAction.REAP, pos);
-        updateDisplay();
+        updateGrid();
       });
 
-      cell.addEventListener("click", (e) => {
+      cell.addEventListener("click", (_e) => {
         player.interactWithPlant(PlantAction.SOW, pos);
-        updateDisplay();
+        updateGrid();
       });
 
       // Add player if position matches
@@ -133,23 +83,93 @@ function updateDisplay() {
         cell.appendChild(playerElement);
       }
 
-      gameContainer.appendChild(cell);
+      gameGrid.appendChild(cell);
     }
   }
 }
+
+// ====== Game HUD ======
+const gameHud = document.createElement("div");
+gameHud.id = "game-hud";
+
+// ====== HUD: Day Button ======
+const dayControls = document.createElement("div");
+dayControls.className = "controls";
+
+const dayCounter = document.createElement("div");
+dayCounter.textContent = `Day: ${gameState.getCurrentDay()}`;
+dayCounter.style.marginBottom = "10px";
+
+const advanceDayButton = document.createElement("button");
+advanceDayButton.textContent = "Next Day";
 
 function advanceDayPlant() {
   for (let y = 0; y < GRID_SIZE; y++) {
     for (let x = 0; x < GRID_SIZE; x++) {
       const plant = grid.getPlant({ x, y });
-      if (plant) {
-        if (plant.growthLevel < 3) {
-          plant.growthLevel++;
-        }
+      if (plant && plant.growthLevel < 3) {
+        plant.growthLevel++;
       }
     }
   }
 }
 
+advanceDayButton.onclick = () => {
+  gameState.advanceDay();
+  dayCounter.textContent = `Day: ${gameState.getCurrentDay()}`;
+  advanceDayPlant();
+  updateGrid();
+};
 
-app.appendChild(gameLayout);
+dayControls.appendChild(dayCounter);
+dayControls.appendChild(advanceDayButton);
+gameHud.appendChild(dayControls);
+
+// ====== Instructions ======
+const instructions = document.createElement("div");
+const description = document.createElement("p");
+
+const controls: { [key: string]: string } = {
+  "Left Click": "Sow a nearby plant",
+  "Right Click": "Reap a nearby plant",
+  "WASD / Arrow Keys": "Move player",
+};
+
+instructions.innerHTML = "<h2>Instructions</h2><hr>";
+for (const [input, action] of Object.entries(controls)) {
+  instructions.innerHTML += `<p><strong>${input}</strong>: ${action}</p>`;
+}
+
+// TODO: Describe mechanics and limitations (e.g. player reach, plant growth, water/sunlight, etc.)
+description.innerText = "Plant seeds, water them, and watch them grow!";
+instructions.appendChild(description);
+
+// ====== Keyboard Listeners ======
+document.addEventListener("keydown", (e) => {
+  switch (e.key.toLowerCase()) {
+    case "arrowup":
+    case "w":
+      player.move("up");
+      break;
+    case "arrowdown":
+    case "s":
+      player.move("down");
+      break;
+    case "arrowleft":
+    case "a":
+      player.move("left");
+      break;
+    case "arrowright":
+    case "d":
+      player.move("right");
+      break;
+  }
+  updateGrid();
+});
+
+// ====== Initialize DOM display ======
+app.appendChild(title);
+app.appendChild(gameGrid);
+app.appendChild(gameHud);
+app.appendChild(instructions);
+updateGrid();
