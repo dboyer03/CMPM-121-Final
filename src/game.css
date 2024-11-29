@@ -70,6 +70,9 @@
   width: 24px;
   height: 24px;
   border: 1px solid black;
+  font-size: 14px;
+  text-align: center;
+  line-height: 24px;
 }
 
 button {
@@ -99,12 +102,12 @@ button:hover {
   transition: all 0.3s ease;
 }
 
-.plant.type-1 {
+.plant.type-green-circle {
   background-color: #4caf50;
   border-radius: 50%;
 }
 
-.plant.type-2 {
+.plant.type-yellow-triangle {
   width: 0;
   height: 0;
   background-color: transparent;
@@ -113,9 +116,16 @@ button:hover {
   border-bottom: 20px solid #ffc107;
 }
 
-.plant.type-3 {
+.plant.type-purple-square {
   background-color: #9c27b0;
   border-radius: 0;
+}
+
+.plant.type-withered {
+  background-color: black;
+  width: 50px;
+  height: 50px;
+  border-radius: 20%;
 }
 
 /* growth levels */

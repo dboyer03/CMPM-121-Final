@@ -21,6 +21,10 @@ h1 {
   color: var(--primary-color);
 }
 
+p {
+  width: 650px;
+}
+
 #app {
   display: flex;
   flex-direction: column;

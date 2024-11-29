@@ -2,12 +2,12 @@
 
 import { Position } from "./position.ts";
 import { Grid } from "./grid.ts";
-import { PlantAction, PlantType } from "./plant.ts";
+import { PlantAction } from "./plant.ts";
 
 export class Player {
   private position: Position;
   private grid: Grid;
-  private currentPlantType: PlantType = PlantType.GREEN_CIRCLE; 
+  private currentPlantType: string = "green-circle";
 
   constructor(grid: Grid, startPos: Position) {
     this.grid = grid;
@@ -43,11 +43,11 @@ export class Player {
     return { ...this.position };
   }
 
-  setPlantType(type: PlantType) {
+  setPlantType(type: string) {
     this.currentPlantType = type;
   }
 
-  getCurrentPlantType(): PlantType {
+  getCurrentPlantType(): string {
     return this.currentPlantType;
   }
 

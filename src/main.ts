@@ -2,7 +2,7 @@
 import { Grid } from "./grid.ts";
 import { Player } from "./player.ts";
 import { GameState } from "./state.ts";
-import { PlantAction, PlantType } from "./plant.ts";
+import { PlantAction, PlantTypeInfo } from "./plant.ts";
 
 import "./style.css";
 import "./game.css";
@@ -28,7 +28,7 @@ const gameGrid = document.createElement("div");
 gameGrid.id = "game-grid";
 gameGrid.style.gridTemplateColumns = `repeat(${GRID_SIZE}, 32px)`;
 
-function updateGrid() {
+function updateGridDisplay() {
   gameGrid.innerHTML = "";
 
   for (let y = 0; y < GRID_SIZE; y++) {
@@ -67,12 +67,12 @@ function updateGrid() {
       cell.addEventListener("contextmenu", (e) => {
         e.preventDefault(); // prevent default right-click menu
         player.interactWithPlant(PlantAction.REAP, pos);
-        updateGrid();
+        updateGridDisplay();
       });
 
       cell.addEventListener("click", (_e) => {
         player.interactWithPlant(PlantAction.SOW, pos);
-        updateGrid();
+        updateGridDisplay();
       });
 
       // Add player if position matches
@@ -80,6 +80,7 @@ function updateGrid() {
       if (playerPos.x === x && playerPos.y === y) {
         const playerElement = document.createElement("div");
         playerElement.className = "player";
+        playerElement.innerText = "👨‍🌾";
         cell.appendChild(playerElement);
       }
 
@@ -103,22 +104,10 @@ dayCounter.style.marginBottom = "10px";
 const advanceDayButton = document.createElement("button");
 advanceDayButton.textContent = "Next Day";
 
-function advanceDayPlant() {
-  for (let y = 0; y < GRID_SIZE; y++) {
-    for (let x = 0; x < GRID_SIZE; x++) {
-      const plant = grid.getPlant({ x, y });
-      if (plant && plant.growthLevel < 3) {
-        plant.growthLevel++;
-      }
-    }
-  }
-}
-
 advanceDayButton.onclick = () => {
   gameState.advanceDay();
   dayCounter.textContent = `Day: ${gameState.getCurrentDay()}`;
-  advanceDayPlant();
-  updateGrid();
+  updateGridDisplay();
 };
 
 dayControls.appendChild(dayCounter);
@@ -133,7 +122,7 @@ const controls: { [key: string]: string } = {
   "Left Click": "Sow a nearby plant",
   "Right Click": "Reap a nearby plant",
   "WASD / Arrow Keys": "Move player",
-  "1/2/3": "Switch plant type",
+  "1 / 2 / 3": "Switch plant type",
 };
 
 instructions.innerHTML = "<h2>Instructions</h2><hr>";
@@ -142,8 +131,23 @@ for (const [input, action] of Object.entries(controls)) {
 }
 
 // TODO: Describe mechanics and limitations (e.g. player reach, plant growth, water/sunlight, etc.)
-description.innerText = "Plant seeds, water them, and watch them grow!";
+description.innerText =
+  `Click the cells current or adjacent to the farmer to sow or reap plants. Click the Next Day button to advance the day. Plants require water and sunlight to grow. Different plants have different requirements (see below). Don't overcrowd plants or they will die.`;
 instructions.appendChild(description);
+{
+  let i = 1;
+  for (const info in PlantTypeInfo) {
+    instructions.innerHTML += `<p><strong>(${i}) ${
+      PlantTypeInfo[info].name
+    }</strong>:<br>
+      To Grow: ${PlantTypeInfo[info].waterToGrow} water,
+      ${ PlantTypeInfo[info].sunToGrow } sunlight,
+      ${ PlantTypeInfo[info].maxCrowding } maximum adjacent plants
+    <br>
+      Can sow at level ${PlantTypeInfo[info].maxGrowth}</p>`;
+    i++;
+  }
+}
 
 // ====== Keyboard Listeners ======
 document.addEventListener("keydown", (e) => {
@@ -151,36 +155,36 @@ document.addEventListener("keydown", (e) => {
     case "ArrowUp":
     case "w":
       player.move("up");
-      updateGrid();
+      updateGridDisplay();
       break;
     case "ArrowDown":
     case "s":
       player.move("down");
-      updateGrid();
+      updateGridDisplay();
       break;
     case "ArrowLeft":
     case "a":
       player.move("left");
-      updateGrid();
+      updateGridDisplay();
       break;
     case "ArrowRight":
     case "d":
       player.move("right");
-      updateGrid();
+      updateGridDisplay();
       break;
     case "1":
     case "num1":
-      player.setPlantType(PlantType.GREEN_CIRCLE);
+      player.setPlantType("green-circle");
       updateHUD();
       break;
     case "2":
     case "num2":
-      player.setPlantType(PlantType.YELLOW_TRIANGLE);
+      player.setPlantType("yellow-triangle");
       updateHUD();
       break;
     case "3":
     case "num3":
-      player.setPlantType(PlantType.PURPLE_SQUARE);
+      player.setPlantType("purple-square");
       updateHUD();
       break;
   }
@@ -189,12 +193,7 @@ document.addEventListener("keydown", (e) => {
 function updateHUD() {
   const plantTypeDisplay = document.querySelector(".current-plant-type");
   if (plantTypeDisplay) {
-    const typeNames = {
-      [PlantType.GREEN_CIRCLE]: "Green Circle",
-      [PlantType.YELLOW_TRIANGLE]: "Yellow Triangle",
-      [PlantType.PURPLE_SQUARE]: "Purple Square"
-    };
-    const typeName = typeNames[player.getCurrentPlantType()];
+    const typeName = PlantTypeInfo[player.getCurrentPlantType()].name;
     plantTypeDisplay.textContent = `Current Plant: ${typeName}`;
   }
 }
@@ -210,4 +209,4 @@ app.appendChild(title);
 app.appendChild(gameGrid);
 app.appendChild(gameHud);
 app.appendChild(instructions);
-updateGrid();
+updateGridDisplay();
