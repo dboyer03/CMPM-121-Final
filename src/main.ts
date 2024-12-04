@@ -11,6 +11,7 @@ import "./game.css";
 // ====== Consts ======
 const GAME_NAME = "CMPM 121 Final Project - Group 33";
 const GRID_SIZE = 10;
+const END_DAY = 31;
 
 const app = document.querySelector<HTMLDivElement>("#app")!;
 
@@ -19,20 +20,47 @@ const app = document.querySelector<HTMLDivElement>("#app")!;
 // ====== Title ======
 document.title = GAME_NAME;
 const title = document.createElement("h1");
-title.innerText = GAME_NAME;
+title.textContent = GAME_NAME;
 
 // ====== Game State ======
-const statTracker = new StatisticTracker();
-const grid = new Grid(GRID_SIZE, GRID_SIZE, statTracker);
-const player = new Player(grid, { x: 0, y: 0 }, statTracker);
-const dayManager = new DayManager(grid);
+interface Game {
+  statTracker: StatisticTracker;
+  grid: Grid;
+  player: Player;
+  dayManager: DayManager;
+}
+
+function newGame(): Game {
+  const game: Partial<Game> = {};
+  game.statTracker = new StatisticTracker();
+  game.grid = new Grid(GRID_SIZE, GRID_SIZE, game.statTracker);
+  game.player = new Player(game.grid, { x: 0, y: 0 }, game.statTracker);
+  game.dayManager = new DayManager(game.grid);
+
+  return game as Game;
+}
+
+function calculateScore(): number {
+  let score = 0;
+  console.log("Plants sown: " + game.statTracker.get("plantSown"));
+
+  score = (game.statTracker.get("plantSown") ?? 0) * 0.5 + // 0.5 points per plant sown
+    (game.statTracker.get("plantReaped") ?? 0) * 1 + // 1 point per plant reaped
+    (game.statTracker.get("plantDied") ?? 0) * -1 + // -1 points per plant died
+    Math.floor((game.statTracker.get("maxGridAlive") ?? 0) / 10) * 10; // 10 points per every 10 plants alive at once
+
+  return score;
+}
+
+// Initialize game
+let game: Game = newGame();
 
 // ====== Game Grid ======
 const gameGrid = document.createElement("div");
 gameGrid.id = "game-grid";
 gameGrid.style.gridTemplateColumns = `repeat(${GRID_SIZE}, 32px)`;
 
-function updateGridDisplay() {
+function updateGridDisplay(): void {
   gameGrid.innerHTML = "";
 
   for (let y = 0; y < GRID_SIZE; y++) {
@@ -41,7 +69,7 @@ function updateGridDisplay() {
       cell.className = "grid-cell";
       const pos = { x, y };
 
-      const cellProperties = grid.getCellProperties(pos);
+      const cellProperties = game.grid.getCellProperties(pos);
 
       // water segments (top o cell)
       for (let i = 0; i < cellProperties.water; i++) {
@@ -59,7 +87,7 @@ function updateGridDisplay() {
         cell.appendChild(segment);
       }
 
-      const plant = grid.getPlant(pos);
+      const plant = game.grid.getPlant(pos);
       if (plant) {
         const plantElement = document.createElement("div");
         plantElement.className =
@@ -70,21 +98,21 @@ function updateGridDisplay() {
       // Add click handlers for plant interactions
       cell.addEventListener("contextmenu", (e) => {
         e.preventDefault(); // prevent default right-click menu
-        player.interactWithPlant(PlantAction.REAP, pos);
+        game.player.interactWithPlant(PlantAction.REAP, pos);
         updateGridDisplay();
       });
 
       cell.addEventListener("click", (_e) => {
-        player.interactWithPlant(PlantAction.SOW, pos);
+        game.player.interactWithPlant(PlantAction.SOW, pos);
         updateGridDisplay();
       });
 
       // Add player if position matches
-      const playerPos = player.getPosition();
+      const playerPos = game.player.getPosition();
       if (playerPos.x === x && playerPos.y === y) {
         const playerElement = document.createElement("div");
         playerElement.className = "player";
-        playerElement.innerText = "👨‍🌾";
+        playerElement.textContent = "👨‍🌾";
         cell.appendChild(playerElement);
       }
 
@@ -97,27 +125,6 @@ function updateGridDisplay() {
 const gameHud = document.createElement("div");
 gameHud.id = "game-hud";
 
-// ====== HUD: Day Button ======
-const dayControls = document.createElement("div");
-dayControls.className = "controls";
-
-const dayCounter = document.createElement("div");
-dayCounter.textContent = `Day: ${dayManager.getCurrentDay()}`;
-dayCounter.style.marginBottom = "10px";
-
-const advanceDayButton = document.createElement("button");
-advanceDayButton.textContent = "Next Day";
-
-advanceDayButton.onclick = () => {
-  dayManager.advanceDay();
-  dayCounter.textContent = `Day: ${dayManager.getCurrentDay()}`;
-  updateGridDisplay();
-};
-
-dayControls.appendChild(dayCounter);
-dayControls.appendChild(advanceDayButton);
-gameHud.appendChild(dayControls);
-
 // ====== HUD: Selected Plant Type ======
 
 const plantTypeDisplay = document.createElement("div");
@@ -126,28 +133,15 @@ const initialTypeName = "Green Circle"; // default plant type
 plantTypeDisplay.textContent = `Current Plant: ${initialTypeName}`;
 gameHud.appendChild(plantTypeDisplay);
 
-function updatePlantSelect() {
+function updatePlantSelect(): void {
   const plantTypeDisplay = document.querySelector(".current-plant-type");
   if (plantTypeDisplay) {
-    const typeName = PlantTypeInfo[player.getCurrentPlantType()].name;
+    const typeName = PlantTypeInfo[game.player.getCurrentPlantType()].name;
     plantTypeDisplay.textContent = `Current Plant: ${typeName}`;
   }
 }
 
 // ====== HUD: Score ======
-// TODO: f0.g Implement scoring system
-function calculateScore(): number {
-  let score = 0;
-  console.log("Plants sown: " + statTracker.get("plantSown"));
-
-  score = (statTracker.get("plantSown") ?? 0) * 0.5 + // 0.5 points per plant sown
-    (statTracker.get("plantReaped") ?? 0) * 1 + // 1 point per plant reaped
-    (statTracker.get("plantDied") ?? 0) * -1 + // -1 points per plant died
-    Math.floor((statTracker.get("maxGridAlive") ?? 0) / 10) * 10; // 10 points per every 10 plants alive at once
-
-  return score;
-}
-
 const scoreDisplay = document.createElement("p");
 scoreDisplay.className = "score";
 
@@ -155,8 +149,47 @@ function updateScoreDisplay(): void {
   console.log("Score: " + calculateScore());
   scoreDisplay.textContent = `Score: ${calculateScore()}`;
 }
-dayManager.addPostDayCallback(updateScoreDisplay);
 gameHud.appendChild(scoreDisplay);
+game.dayManager.addPostDayCallback(updateScoreDisplay);
+
+// ====== HUD: Day Button ======
+const dayControls = document.createElement("div");
+dayControls.className = "controls";
+
+const dayCounter = document.createElement("div");
+dayCounter.textContent = `Day: ${game.dayManager.getCurrentDay()}`;
+dayCounter.style.marginBottom = "10px";
+
+const advanceDayButton = document.createElement("button");
+advanceDayButton.textContent = "Next Day";
+
+function updateDayDisplay(): void {
+  dayCounter.textContent = `Day: ${game.dayManager.getCurrentDay()}`;
+}
+
+advanceDayButton.onclick = () => {
+  // Game Over
+  if (game.dayManager.getCurrentDay() >= END_DAY) {
+    alert("Game Over! Your final score is: " + calculateScore());
+
+    game = newGame();
+    game.dayManager.addPostDayCallback(updateScoreDisplay);
+    updateGridDisplay();
+    updateDayDisplay();
+    updateScoreDisplay();
+
+    return;
+  }
+
+  // Next day
+  game.dayManager.advanceDay();
+  dayCounter.textContent = `Day: ${game.dayManager.getCurrentDay()}`;
+  updateGridDisplay();
+};
+
+dayControls.appendChild(dayCounter);
+dayControls.appendChild(advanceDayButton);
+gameHud.appendChild(dayControls);
 
 // ====== Instructions ======
 const instructions = document.createElement("div");
@@ -176,7 +209,7 @@ const instructions = document.createElement("div");
   }
 
   // TODO: Describe mechanics and limitations (e.g. player reach, plant growth, water/sunlight, etc.)
-  description.innerText =
+  description.textContent =
     `Click the cells current or adjacent to the farmer to sow or reap plants. Click the Next Day button to advance the day. Plants require water and sunlight to grow. Different plants have different requirements (see below). Don't overcrowd plants or they will die.`;
   instructions.appendChild(description);
   {
@@ -200,37 +233,37 @@ document.addEventListener("keydown", (e) => {
   switch (e.key) {
     case "ArrowUp":
     case "w":
-      player.move("up");
+      game.player.move("up");
       updateGridDisplay();
       break;
     case "ArrowDown":
     case "s":
-      player.move("down");
+      game.player.move("down");
       updateGridDisplay();
       break;
     case "ArrowLeft":
     case "a":
-      player.move("left");
+      game.player.move("left");
       updateGridDisplay();
       break;
     case "ArrowRight":
     case "d":
-      player.move("right");
+      game.player.move("right");
       updateGridDisplay();
       break;
     case "1":
     case "num1":
-      player.setPlantType("green-circle");
+      game.player.setPlantType("green-circle");
       updatePlantSelect();
       break;
     case "2":
     case "num2":
-      player.setPlantType("yellow-triangle");
+      game.player.setPlantType("yellow-triangle");
       updatePlantSelect();
       break;
     case "3":
     case "num3":
-      player.setPlantType("purple-square");
+      game.player.setPlantType("purple-square");
       updatePlantSelect();
       break;
   }
