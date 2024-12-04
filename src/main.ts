@@ -104,10 +104,30 @@ dayCounter.style.marginBottom = "10px";
 const advanceDayButton = document.createElement("button");
 advanceDayButton.textContent = "Next Day";
 
+//tracking progression for plant points
+let plantPoints = 0;
+const points = document.createElement("div");
+points.id = "plant-growth-counter";
+points.textContent = `You have: ${plantPoints} Points`;
+
+//updates plant point counter
+function updatePlantPoints(): void{
+  points.textContent = `You have: ${plantPoints} Points`;
+}
+
+function checkGrowth(grid: Grid): void{
+  const grownPlantCount = grid.getGrowthLevel(1);
+  if(grownPlantCount >= 5){
+    plantPoints++;
+    updatePlantPoints();
+  }
+}
+
 advanceDayButton.onclick = () => {
   gameState.advanceDay();
   dayCounter.textContent = `Day: ${gameState.getCurrentDay()}`;
   updateGridDisplay();
+  checkGrowth(grid);
 };
 
 dayControls.appendChild(dayCounter);
@@ -208,5 +228,6 @@ gameHud.appendChild(plantTypeDisplay);
 app.appendChild(title);
 app.appendChild(gameGrid);
 app.appendChild(gameHud);
+app.appendChild(points);
 app.appendChild(instructions);
 updateGridDisplay();
