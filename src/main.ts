@@ -14,6 +14,8 @@ const GRID_SIZE = 10;
 
 const app = document.querySelector<HTMLDivElement>("#app")!;
 
+// TODO: Implement Game Over
+
 // ====== Title ======
 document.title = GAME_NAME;
 const title = document.createElement("h1");
@@ -116,10 +118,45 @@ dayControls.appendChild(dayCounter);
 dayControls.appendChild(advanceDayButton);
 gameHud.appendChild(dayControls);
 
+// ====== HUD: Selected Plant Type ======
+
+const plantTypeDisplay = document.createElement("div");
+plantTypeDisplay.className = "current-plant-type";
+const initialTypeName = "Green Circle"; // default plant type
+plantTypeDisplay.textContent = `Current Plant: ${initialTypeName}`;
+gameHud.appendChild(plantTypeDisplay);
+
+function updatePlantSelect() {
+  const plantTypeDisplay = document.querySelector(".current-plant-type");
+  if (plantTypeDisplay) {
+    const typeName = PlantTypeInfo[player.getCurrentPlantType()].name;
+    plantTypeDisplay.textContent = `Current Plant: ${typeName}`;
+  }
+}
+
 // ====== HUD: Score ======
 // TODO: f0.g Implement scoring system
-const scoreDisplay = document.createElement("div");
+function calculateScore(): number {
+  let score = 0;
+  console.log("Plants sown: " + statTracker.get("plantSown"));
+
+  score = (statTracker.get("plantSown") ?? 0) * 0.5 + // 0.5 points per plant sown
+    (statTracker.get("plantReaped") ?? 0) * 1 + // 1 point per plant reaped
+    (statTracker.get("plantDied") ?? 0) * -1 + // -1 points per plant died
+    Math.floor((statTracker.get("maxGridAlive") ?? 0) / 10) * 10; // 10 points per every 10 plants alive at once
+
+  return score;
+}
+
+const scoreDisplay = document.createElement("p");
 scoreDisplay.className = "score";
+
+function updateScoreDisplay(): void {
+  console.log("Score: " + calculateScore());
+  scoreDisplay.textContent = `Score: ${calculateScore()}`;
+}
+dayManager.addPostDayCallback(updateScoreDisplay);
+gameHud.appendChild(scoreDisplay);
 
 // ====== Instructions ======
 const instructions = document.createElement("div");
@@ -184,34 +221,20 @@ document.addEventListener("keydown", (e) => {
     case "1":
     case "num1":
       player.setPlantType("green-circle");
-      updateHUD();
+      updatePlantSelect();
       break;
     case "2":
     case "num2":
       player.setPlantType("yellow-triangle");
-      updateHUD();
+      updatePlantSelect();
       break;
     case "3":
     case "num3":
       player.setPlantType("purple-square");
-      updateHUD();
+      updatePlantSelect();
       break;
   }
 });
-
-function updateHUD() {
-  const plantTypeDisplay = document.querySelector(".current-plant-type");
-  if (plantTypeDisplay) {
-    const typeName = PlantTypeInfo[player.getCurrentPlantType()].name;
-    plantTypeDisplay.textContent = `Current Plant: ${typeName}`;
-  }
-}
-
-const plantTypeDisplay = document.createElement("div");
-plantTypeDisplay.className = "current-plant-type";
-const initialTypeName = "Green Circle"; // default plant type
-plantTypeDisplay.textContent = `Current Plant: ${initialTypeName}`;
-gameHud.appendChild(plantTypeDisplay);
 
 // ====== Initialize DOM display ======
 app.appendChild(title);
@@ -219,3 +242,4 @@ app.appendChild(gameGrid);
 app.appendChild(gameHud);
 app.appendChild(instructions);
 updateGridDisplay();
+updateScoreDisplay();

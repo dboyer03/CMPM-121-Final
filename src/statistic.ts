@@ -1,6 +1,6 @@
 export type StatisticName =
   | "playerTraveled" // steps taken
-  | "maxGridFilled" // max number of live plants on the grid
+  | "maxGridAlive" // max number of live plants on the grid
   | "plantSown"
   | "plantReaped"
   | "plantDied";
@@ -16,7 +16,7 @@ export class StatisticTracker {
   constructor() {
     this.statistics = new Map<StatisticName, StatisticValue>([
       ["playerTraveled", 0],
-      ["maxGridFilled", 0],
+      ["maxGridAlive", 0],
       ["plantSown", new Map<string, number>()],
       ["plantReaped", new Map<string, number>()],
       ["plantDied", new Map<string, number>()],
@@ -34,21 +34,17 @@ export class StatisticTracker {
       return value;
     }
 
-    if (Object.hasOwn(value, "size")) {
-      if (value.size === 0) {
-        return 0;
-      }
-
-      if (key === undefined) {
-        // return sum if no key specified
-        return Array.from(value.values()).reduce((sum, next) => sum + next);
-      }
-
-      // otherwise, return value for key
-      return value.get(key) ?? null;
+    // if defined and not number, must be a maps
+    if (value.size === 0) {
+      return 0;
     }
 
-    return null;
+    if (key === undefined) {
+      // return sum if no key specified
+      return Array.from(value.values()).reduce((sum, next) => sum + next);
+    }
+    // otherwise, return value for key
+    return value.get(key) ?? null;
   }
 
   /** Increments a statistic by 1. */
@@ -59,25 +55,26 @@ export class StatisticTracker {
     }
     if (typeof value === "number") {
       this.statistics.set(statistic, value + 1);
+      console.log(`Set ${statistic} to ${value + 1}`);
     } else if (key !== undefined) {
       // if not a number, it must be a map
-      const count = value.get(key) ?? 0;
-      value.set(key, count + 1);
+      const currentValue = value.get(key) ?? 0;
+      value.set(key, currentValue + 1);
+      console.log(`Set ${statistic} ${key} to ${currentValue + 1}`);
     }
   }
 
   /** Sets a max statistic if the new value is greater than the current value. */
   setMax(statistic: StatisticName, value: number, key?: string): void {
-    const currentValue = this.get(statistic, key); // checks if stat exists
-    if (currentValue !== null && value > currentValue) {
-      if (typeof this.statistics.get(statistic) === "number") {
-        this.statistics.set(statistic, value);
-      } else if (key !== undefined) {
-        // since currentValue exists, is not null, and not a number, it must be a map
-        (this.statistics.get(statistic)! as Map<string, number>).set(
-          key,
-          value,
-        );
+    const currentValue = this.statistics.get(statistic); // checks if stat exists
+    if (currentValue !== undefined) {
+      if (typeof currentValue === "number") { // checks if stat is a number
+        if (value > currentValue) {
+          this.statistics.set(statistic, value);
+        }
+      } else if (key !== undefined && value > (currentValue.get(key) ?? 0)) {
+        // since currentValue exists, is defined, and not a number, then it must be a map
+        currentValue.set(key, value);
       }
     }
   }

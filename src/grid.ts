@@ -82,7 +82,7 @@ export class Grid extends StatisticSubject {
         }
       }
     }
-    this.statisticTracker.setMax("maxGridFilled", livingPlants);
+    this.statisticTracker.setMax("maxGridAlive", livingPlants);
   }
 
   getCellProperties(pos: Position): Cell {
