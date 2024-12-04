@@ -1,7 +1,7 @@
 // ====== Main + Imports ======
 import { Grid } from "./grid.ts";
 import { Player } from "./player.ts";
-import { DayManager } from "./state.ts";
+import { DayManager } from "./day.ts";
 import { PlantAction, PlantTypeInfo } from "./plant.ts";
 import { StatisticTracker } from "./statistic.ts";
 
