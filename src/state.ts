@@ -2,7 +2,7 @@
 
 import { Grid } from "./grid.ts";
 
-export class GameState {
+export class DayManager {
   private dayCount: number;
   private grid: Grid;
 

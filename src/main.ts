@@ -1,8 +1,9 @@
 // ====== Main + Imports ======
 import { Grid } from "./grid.ts";
 import { Player } from "./player.ts";
-import { GameState } from "./state.ts";
+import { DayManager } from "./state.ts";
 import { PlantAction, PlantTypeInfo } from "./plant.ts";
+import { StatisticTracker } from "./statistic.ts";
 
 import "./style.css";
 import "./game.css";
@@ -19,9 +20,10 @@ const title = document.createElement("h1");
 title.innerText = GAME_NAME;
 
 // ====== Game State ======
-const grid = new Grid(GRID_SIZE, GRID_SIZE);
-const player = new Player(grid, { x: 0, y: 0 });
-const gameState = new GameState(grid);
+const statTracker = new StatisticTracker();
+const grid = new Grid(GRID_SIZE, GRID_SIZE, statTracker);
+const player = new Player(grid, { x: 0, y: 0 }, statTracker);
+const dayManager = new DayManager(grid);
 
 // ====== Game Grid ======
 const gameGrid = document.createElement("div");
@@ -98,15 +100,15 @@ const dayControls = document.createElement("div");
 dayControls.className = "controls";
 
 const dayCounter = document.createElement("div");
-dayCounter.textContent = `Day: ${gameState.getCurrentDay()}`;
+dayCounter.textContent = `Day: ${dayManager.getCurrentDay()}`;
 dayCounter.style.marginBottom = "10px";
 
 const advanceDayButton = document.createElement("button");
 advanceDayButton.textContent = "Next Day";
 
 advanceDayButton.onclick = () => {
-  gameState.advanceDay();
-  dayCounter.textContent = `Day: ${gameState.getCurrentDay()}`;
+  dayManager.advanceDay();
+  dayCounter.textContent = `Day: ${dayManager.getCurrentDay()}`;
   updateGridDisplay();
 };
 
@@ -114,38 +116,45 @@ dayControls.appendChild(dayCounter);
 dayControls.appendChild(advanceDayButton);
 gameHud.appendChild(dayControls);
 
+// ====== HUD: Score ======
+// TODO: f0.g Implement scoring system
+const scoreDisplay = document.createElement("div");
+scoreDisplay.className = "score";
+
 // ====== Instructions ======
 const instructions = document.createElement("div");
-const description = document.createElement("p");
-
-const controls: { [key: string]: string } = {
-  "Left Click": "Sow a nearby plant",
-  "Right Click": "Reap a nearby plant",
-  "WASD / Arrow Keys": "Move player",
-  "1 / 2 / 3": "Switch plant type",
-};
-
-instructions.innerHTML = "<h2>Instructions</h2><hr>";
-for (const [input, action] of Object.entries(controls)) {
-  instructions.innerHTML += `<p><strong>${input}</strong>: ${action}</p>`;
-}
-
-// TODO: Describe mechanics and limitations (e.g. player reach, plant growth, water/sunlight, etc.)
-description.innerText =
-  `Click the cells current or adjacent to the farmer to sow or reap plants. Click the Next Day button to advance the day. Plants require water and sunlight to grow. Different plants have different requirements (see below). Don't overcrowd plants or they will die.`;
-instructions.appendChild(description);
 {
-  let i = 1;
-  for (const info in PlantTypeInfo) {
-    instructions.innerHTML += `<p><strong>(${i}) ${
-      PlantTypeInfo[info].name
-    }</strong>:<br>
+  const description = document.createElement("p");
+
+  const controls: { [key: string]: string } = {
+    "Left Click": "Sow a nearby plant",
+    "Right Click": "Reap a nearby plant",
+    "WASD / Arrow Keys": "Move player",
+    "1 / 2 / 3": "Switch plant type",
+  };
+
+  instructions.innerHTML = "<h2>Instructions</h2><hr>";
+  for (const [input, action] of Object.entries(controls)) {
+    instructions.innerHTML += `<p><strong>${input}</strong>: ${action}</p>`;
+  }
+
+  // TODO: Describe mechanics and limitations (e.g. player reach, plant growth, water/sunlight, etc.)
+  description.innerText =
+    `Click the cells current or adjacent to the farmer to sow or reap plants. Click the Next Day button to advance the day. Plants require water and sunlight to grow. Different plants have different requirements (see below). Don't overcrowd plants or they will die.`;
+  instructions.appendChild(description);
+  {
+    let i = 1;
+    for (const info in PlantTypeInfo) {
+      instructions.innerHTML += `<p><strong>(${i}) ${
+        PlantTypeInfo[info].name
+      }</strong>:<br>
       To Grow: ${PlantTypeInfo[info].waterToGrow} water,
-      ${ PlantTypeInfo[info].sunToGrow } sunlight,
-      ${ PlantTypeInfo[info].maxCrowding } maximum adjacent plants
+      ${PlantTypeInfo[info].sunToGrow} sunlight,
+      ${PlantTypeInfo[info].maxCrowding} maximum adjacent plants
     <br>
       Can sow at level ${PlantTypeInfo[info].maxGrowth}</p>`;
-    i++;
+      i++;
+    }
   }
 }
 
