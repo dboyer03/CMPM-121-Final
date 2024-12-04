@@ -210,11 +210,16 @@ const instructions = document.createElement("div");
 
   // TODO: Describe mechanics and limitations (e.g. player reach, plant growth, water/sunlight, etc.)
   description.textContent =
-    `Click the cells current or adjacent to the farmer to sow or reap plants. Click the Next Day button to advance the day. Plants require water and sunlight to grow. Different plants have different requirements (see below). Don't overcrowd plants or they will die.`;
+    `Click the cells current or adjacent to the farmer to sow or reap plants. \
+    Click the Next Day button to advance the day. Plants require water and sunlight to grow. \
+    Different plants have different requirements (see below). \
+    Don't overcrowd plants or they will die (Black squares, reap to clear). \
+    See how high of a score you can get in ${END_DAY} days!`;
   instructions.appendChild(description);
   {
     let i = 1;
     for (const info in PlantTypeInfo) {
+      if (info === "withered") continue;
       instructions.innerHTML += `<p><strong>(${i}) ${
         PlantTypeInfo[info].name
       }</strong>:<br>
