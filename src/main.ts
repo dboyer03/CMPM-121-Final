@@ -185,7 +185,6 @@ advanceDayButton.onclick = () => {
   game.dayManager.advanceDay();
   dayCounter.textContent = `Day: ${game.dayManager.getCurrentDay()}`;
   updateGridDisplay();
-  checkGrowth(grid);
 };
 
 dayControls.appendChild(dayCounter);
@@ -279,7 +278,6 @@ document.addEventListener("keydown", (e) => {
 app.appendChild(title);
 app.appendChild(gameGrid);
 app.appendChild(gameHud);
-app.appendChild(points);
 app.appendChild(instructions);
 updateGridDisplay();
 updateScoreDisplay();
