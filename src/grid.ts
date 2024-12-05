@@ -3,8 +3,9 @@
 import { Position } from "./position.ts";
 import { canGrow, Plant, PlantTypeInfo } from "./plant.ts";
 import { Cell } from "./cell.ts";
+import { StatisticSubject, StatisticTracker } from "./statistic.ts";
 
-export class Grid {
+export class Grid extends StatisticSubject {
   private width: number;
   private height: number;
   private plants: Map<string, Plant>;
@@ -15,7 +16,8 @@ export class Grid {
   private readonly MIN_WATER_RETENTION = 0.5; // % water retention
   private readonly MAX_SUNLIGHT = 3; // max sunlight
 
-  constructor(width: number, height: number) {
+  constructor(width: number, height: number, statTracker: StatisticTracker) {
+    super(statTracker);
     this.width = width;
     this.height = height;
     this.plants = new Map();
@@ -33,6 +35,8 @@ export class Grid {
   }
 
   updateEnvironment(): void {
+    let livingPlants = 0;
+
     // update cell resources
     for (let y = 0; y < this.height; y++) {
       for (let x = 0; x < this.width; x++) {
@@ -64,14 +68,21 @@ export class Grid {
           }
 
           // check for crowding
-          if (this.countAdjacentPlants(pos) > PlantTypeInfo[plant.type].maxCrowding) {
+          if (
+            this.countAdjacentPlants(pos) >
+              PlantTypeInfo[plant.type].maxCrowding
+          ) {
+            // kill plant
+            this.statisticTracker.increment("plantDied", plant.type); // notify before modification
             this.plants.set(key, { type: "withered", growthLevel: 1 });
+          } else {
+            // plant didn't die
+            livingPlants++;
           }
         }
-
-        this.cells.set(key, cell);
       }
     }
+    this.statisticTracker.setMax("maxGridAlive", livingPlants);
   }
 
   getCellProperties(pos: Position): Cell {
@@ -94,6 +105,7 @@ export class Grid {
     if (!this.plants.has(key) && canGrow(plant, cell.water, cell.sunlight)) {
       this.plants.set(key, plant);
       cell.water -= PlantTypeInfo[type].waterToGrow;
+      this.statisticTracker.increment("plantSown", type);
       return true;
     }
     return false;
@@ -104,6 +116,9 @@ export class Grid {
     const plant = this.plants.get(key);
     if (plant && plant.growthLevel === PlantTypeInfo[plant.type].maxGrowth) {
       this.plants.delete(key);
+      if (plant.type !== "withered") {
+        this.statisticTracker.increment("plantReaped", plant.type);
+      }
       return plant;
     }
     return null;
@@ -126,14 +141,16 @@ export class Grid {
     let count = 0;
     for (let y = pos.y - 1; y <= pos.y + 1; y++) {
       for (let x = pos.x - 1; x <= pos.x + 1; x++) {
-        if (this.isValidPosition({ x, y }) &&
-            !(x === pos.x && y === pos.y) &&
-            this.getPlant({ x, y })) {
+        if (
+          this.isValidPosition({ x, y }) &&
+          !(x === pos.x && y === pos.y) &&
+          this.getPlant({ x, y })
+        ) {
           count++;
         }
       }
     }
-    return count
+    return count;
   }
   //checks for plants at x growth level
   getGrowthLevel(level: number): number {
