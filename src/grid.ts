@@ -152,17 +152,4 @@ export class Grid extends StatisticSubject {
     }
     return count;
   }
-  //checks for plants at x growth level
-  getGrowthLevel(level: number): number {
-    let count = 0;
-    for(let y = 0; y < this.height; y++){
-      for(let x = 0; x < this.width; x++){
-        const plant = this.getPlant({x,y});
-        if(plant && plant.growthLevel > level){
-          count++
-        }
-      }
-    }
-    return count;
-  }
 }
