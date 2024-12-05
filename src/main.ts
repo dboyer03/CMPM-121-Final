@@ -15,8 +15,6 @@ const END_DAY = 31;
 
 const app = document.querySelector<HTMLDivElement>("#app")!;
 
-// TODO: Implement Game Over
-
 // ====== Title ======
 document.title = GAME_NAME;
 const title = document.createElement("h1");
@@ -34,8 +32,8 @@ function newGame(): Game {
   const game: Partial<Game> = {};
   game.statTracker = new StatisticTracker();
   game.grid = new Grid(GRID_SIZE, GRID_SIZE, game.statTracker);
-  game.player = new Player(game.grid, { x: 0, y: 0 }, game.statTracker);
   game.dayManager = new DayManager(game.grid);
+  game.player = new Player(game.grid, game.dayManager, { x: 0, y: 0 }, game.statTracker);
 
   return game as Game;
 }
@@ -53,6 +51,19 @@ function calculateScore(): number {
 
 // Initialize game
 let game: Game = newGame();
+
+// ====== Check for Auto-Save ======
+function checkForAutoSave(): void {
+  const autoSave = localStorage.getItem("save_auto");
+  if (autoSave) {
+    const continueGame = confirm("Do you want to continue where you left off?");
+    if (continueGame) {
+      game.dayManager = DayManager.deserialize(autoSave, game.grid);
+      updateGridDisplay();
+      alert("Game loaded from auto-save.");
+    }
+  }
+}
 
 // ====== Game Grid ======
 const gameGrid = document.createElement("div");
@@ -116,6 +127,33 @@ function updateGridDisplay(): void {
       }
 
       gameGrid.appendChild(cell);
+    }
+  }
+}
+
+// ====== Save and Load Functions ======
+function saveGame(slot: string): void {
+  const serializedState = game.dayManager.serialize();
+  localStorage.setItem(`save_${slot}`, serializedState);
+  alert(`Game saved to slot ${slot}`);
+}
+
+function loadGame(): void {
+  const slots = Object.keys(localStorage).filter(key => key.startsWith("save_"));
+  if (slots.length === 0) {
+    alert("No save slots available.");
+    return;
+  }
+
+  const slot = prompt(`Enter save slot name:\nAvailable slots:\n${slots.map(s => s.replace("save_", "")).join("\n")}`);
+  if (slot) {
+    const serializedState = localStorage.getItem(`save_${slot}`);
+    if (serializedState) {
+      game.dayManager = DayManager.deserialize(serializedState, game.grid);
+      updateGridDisplay();
+      alert(`Game loaded from slot ${slot}`);
+    } else {
+      alert(`No save found in slot ${slot}`);
     }
   }
 }
@@ -185,8 +223,49 @@ advanceDayButton.onclick = () => {
   updateGridDisplay();
 };
 
+// ====== Save and Load Buttons ======
+const saveButton = document.createElement("button");
+saveButton.textContent = "Save Game";
+saveButton.onclick = () => {
+  const slot = prompt("Enter save slot name:");
+  if (slot) {
+    saveGame(slot);
+  }
+};
+
+const loadButton = document.createElement("button");
+loadButton.textContent = "Load Game";
+loadButton.onclick = () => {
+  loadGame();
+};
+
+// ====== Undo and Redo Buttons ======
+const undoButton = document.createElement("button");
+undoButton.textContent = "Undo";
+undoButton.onclick = () => {
+  if (game.dayManager.undo()) {
+    updateGridDisplay();
+  } else {
+    alert("No more actions to undo.");
+  }
+};
+
+const redoButton = document.createElement("button");
+redoButton.textContent = "Redo";
+redoButton.onclick = () => {
+  if (game.dayManager.redo()) {
+    updateGridDisplay();
+  } else {
+    alert("No more actions to redo.");
+  }
+};
+
 dayControls.appendChild(dayCounter);
 dayControls.appendChild(advanceDayButton);
+dayControls.appendChild(saveButton);
+dayControls.appendChild(loadButton);
+dayControls.appendChild(undoButton);
+dayControls.appendChild(redoButton);
 gameHud.appendChild(dayControls);
 
 // ====== Instructions ======
@@ -279,3 +358,6 @@ app.appendChild(gameHud);
 app.appendChild(instructions);
 updateGridDisplay();
 updateScoreDisplay();
+
+// ====== Check for Auto-Save on Launch ======
+checkForAutoSave();

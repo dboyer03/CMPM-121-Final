@@ -8,8 +8,8 @@ import { StatisticSubject, StatisticTracker } from "./statistic.ts";
 export class Grid extends StatisticSubject {
   private width: number;
   private height: number;
+  private state: Uint8Array; // Byte array to store grid state
   private plants: Map<string, Plant>;
-  private cells: Map<string, Cell>;
   private readonly INTERACTION_RANGE = 1; // adjacent cell range
   private readonly MAX_WATER = 5; // max water
   private readonly MAX_RAIN = 2; // max water increase per tick
@@ -20,18 +20,48 @@ export class Grid extends StatisticSubject {
     super(statTracker);
     this.width = width;
     this.height = height;
+    this.state = new Uint8Array(width * height * 2); // Each cell has water and sunlight
     this.plants = new Map();
-    this.cells = new Map();
 
-    // init cells
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        this.cells.set(this.getKey({ x, y }), {
-          water: 0,
-          sunlight: 0,
-        });
-      }
+    // Initialize state
+    for (let i = 0; i < this.state.length; i += 2) {
+      this.state[i] = 0; // water
+      this.state[i + 1] = 0; // sunlight
     }
+  }
+
+  private getIndex(pos: Position): number {
+    return (pos.y * this.width + pos.x) * 2;
+  }
+
+  getCellProperties(pos: Position): Cell {
+    const index = this.getIndex(pos);
+    return {
+      water: this.state[index],
+      sunlight: this.state[index + 1],
+    };
+  }
+
+  setCellProperties(pos: Position, cell: Cell): void {
+    const index = this.getIndex(pos);
+    this.state[index] = cell.water;
+    this.state[index + 1] = cell.sunlight;
+  }
+
+  getState(): Uint8Array {
+    return this.state;
+  }
+
+  setState(state: Uint8Array): void {
+    this.state = state;
+  }
+
+  getPlants(): Map<string, Plant> {
+    return this.plants;
+  }
+
+  setPlants(plants: Map<string, Plant>): void {
+    this.plants = plants;
   }
 
   updateEnvironment(): void {
@@ -42,7 +72,7 @@ export class Grid extends StatisticSubject {
       for (let x = 0; x < this.width; x++) {
         const pos = { x, y };
         const key = this.getKey(pos);
-        const cell = this.cells.get(key)!;
+        const cell = this.getCellProperties(pos);
         const plant = this.plants.get(key);
 
         // update water (rain)
@@ -80,13 +110,11 @@ export class Grid extends StatisticSubject {
             livingPlants++;
           }
         }
+
+        this.setCellProperties(pos, cell);
       }
     }
     this.statisticTracker.setMax("maxGridAlive", livingPlants);
-  }
-
-  getCellProperties(pos: Position): Cell {
-    return this.cells.get(this.getKey(pos)) || { water: 0, sunlight: 0 };
   }
 
   isWithinRange(playerPos: Position, targetPos: Position): boolean {
@@ -106,6 +134,7 @@ export class Grid extends StatisticSubject {
       this.plants.set(key, plant);
       cell.water -= PlantTypeInfo[type].waterToGrow;
       this.statisticTracker.increment("plantSown", type);
+      this.setCellProperties(pos, cell);
       return true;
     }
     return false;
