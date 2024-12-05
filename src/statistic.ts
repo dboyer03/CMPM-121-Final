@@ -55,12 +55,10 @@ export class StatisticTracker {
     }
     if (typeof value === "number") {
       this.statistics.set(statistic, value + 1);
-      console.log(`Set ${statistic} to ${value + 1}`);
     } else if (key !== undefined) {
       // if not a number, it must be a map
       const currentValue = value.get(key) ?? 0;
       value.set(key, currentValue + 1);
-      console.log(`Set ${statistic} ${key} to ${currentValue + 1}`);
     }
   }
 

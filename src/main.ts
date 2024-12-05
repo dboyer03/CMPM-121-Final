@@ -42,7 +42,6 @@ function newGame(): Game {
 
 function calculateScore(): number {
   let score = 0;
-  console.log("Plants sown: " + game.statTracker.get("plantSown"));
 
   score = (game.statTracker.get("plantSown") ?? 0) * 0.5 + // 0.5 points per plant sown
     (game.statTracker.get("plantReaped") ?? 0) * 1 + // 1 point per plant reaped
@@ -146,7 +145,6 @@ const scoreDisplay = document.createElement("p");
 scoreDisplay.className = "score";
 
 function updateScoreDisplay(): void {
-  console.log("Score: " + calculateScore());
   scoreDisplay.textContent = `Score: ${calculateScore()}`;
 }
 gameHud.appendChild(scoreDisplay);
