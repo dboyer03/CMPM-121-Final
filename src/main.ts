@@ -15,8 +15,6 @@ const END_DAY = 31;
 
 const app = document.querySelector<HTMLDivElement>("#app")!;
 
-// TODO: Implement Game Over
-
 // ====== Title ======
 document.title = GAME_NAME;
 const title = document.createElement("h1");
@@ -34,8 +32,8 @@ function newGame(): Game {
   const game: Partial<Game> = {};
   game.statTracker = new StatisticTracker();
   game.grid = new Grid(GRID_SIZE, GRID_SIZE, game.statTracker);
-  game.player = new Player(game.grid, { x: 0, y: 0 }, game.statTracker);
   game.dayManager = new DayManager(game.grid);
+  game.player = new Player(game.grid, game.dayManager, { x: 0, y: 0 }, game.statTracker);
 
   return game as Game;
 }
@@ -241,10 +239,33 @@ loadButton.onclick = () => {
   loadGame();
 };
 
+// ====== Undo and Redo Buttons ======
+const undoButton = document.createElement("button");
+undoButton.textContent = "Undo";
+undoButton.onclick = () => {
+  if (game.dayManager.undo()) {
+    updateGridDisplay();
+  } else {
+    alert("No more actions to undo.");
+  }
+};
+
+const redoButton = document.createElement("button");
+redoButton.textContent = "Redo";
+redoButton.onclick = () => {
+  if (game.dayManager.redo()) {
+    updateGridDisplay();
+  } else {
+    alert("No more actions to redo.");
+  }
+};
+
 dayControls.appendChild(dayCounter);
 dayControls.appendChild(advanceDayButton);
 dayControls.appendChild(saveButton);
 dayControls.appendChild(loadButton);
+dayControls.appendChild(undoButton);
+dayControls.appendChild(redoButton);
 gameHud.appendChild(dayControls);
 
 // ====== Instructions ======
