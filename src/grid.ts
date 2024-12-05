@@ -48,6 +48,22 @@ export class Grid extends StatisticSubject {
     this.state[index + 1] = cell.sunlight;
   }
 
+  getState(): Uint8Array {
+    return this.state;
+  }
+
+  setState(state: Uint8Array): void {
+    this.state = state;
+  }
+
+  getPlants(): Map<string, Plant> {
+    return this.plants;
+  }
+
+  setPlants(plants: Map<string, Plant>): void {
+    this.plants = plants;
+  }
+
   updateEnvironment(): void {
     let livingPlants = 0;
 

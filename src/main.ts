@@ -120,6 +120,33 @@ function updateGridDisplay(): void {
   }
 }
 
+// ====== Save and Load Functions ======
+function saveGame(slot: string): void {
+  const serializedState = game.dayManager.serialize();
+  localStorage.setItem(`save_${slot}`, serializedState);
+  alert(`Game saved to slot ${slot}`);
+}
+
+function loadGame(): void {
+  const slots = Object.keys(localStorage).filter(key => key.startsWith("save_"));
+  if (slots.length === 0) {
+    alert("No save slots available.");
+    return;
+  }
+
+  const slot = prompt(`Enter save slot name:\nAvailable slots:\n${slots.map(s => s.replace("save_", "")).join("\n")}`);
+  if (slot) {
+    const serializedState = localStorage.getItem(`save_${slot}`);
+    if (serializedState) {
+      game.dayManager = DayManager.deserialize(serializedState, game.grid);
+      updateGridDisplay();
+      alert(`Game loaded from slot ${slot}`);
+    } else {
+      alert(`No save found in slot ${slot}`);
+    }
+  }
+}
+
 // ====== Game HUD ======
 const gameHud = document.createElement("div");
 gameHud.id = "game-hud";
@@ -185,8 +212,26 @@ advanceDayButton.onclick = () => {
   updateGridDisplay();
 };
 
+// ====== Save and Load Buttons ======
+const saveButton = document.createElement("button");
+saveButton.textContent = "Save Game";
+saveButton.onclick = () => {
+  const slot = prompt("Enter save slot name:");
+  if (slot) {
+    saveGame(slot);
+  }
+};
+
+const loadButton = document.createElement("button");
+loadButton.textContent = "Load Game";
+loadButton.onclick = () => {
+  loadGame();
+};
+
 dayControls.appendChild(dayCounter);
 dayControls.appendChild(advanceDayButton);
+dayControls.appendChild(saveButton);
+dayControls.appendChild(loadButton);
 gameHud.appendChild(dayControls);
 
 // ====== Instructions ======
