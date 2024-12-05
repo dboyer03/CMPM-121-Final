@@ -54,6 +54,19 @@ function calculateScore(): number {
 // Initialize game
 let game: Game = newGame();
 
+// ====== Check for Auto-Save ======
+function checkForAutoSave(): void {
+  const autoSave = localStorage.getItem("save_auto");
+  if (autoSave) {
+    const continueGame = confirm("Do you want to continue where you left off?");
+    if (continueGame) {
+      game.dayManager = DayManager.deserialize(autoSave, game.grid);
+      updateGridDisplay();
+      alert("Game loaded from auto-save.");
+    }
+  }
+}
+
 // ====== Game Grid ======
 const gameGrid = document.createElement("div");
 gameGrid.id = "game-grid";
@@ -324,3 +337,6 @@ app.appendChild(gameHud);
 app.appendChild(instructions);
 updateGridDisplay();
 updateScoreDisplay();
+
+// ====== Check for Auto-Save on Launch ======
+checkForAutoSave();
