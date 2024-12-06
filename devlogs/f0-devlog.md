@@ -1,4 +1,4 @@
-# f0 Devlog
+# F0 Devlog
 
  by CMPM 121 - Group 33
 - Jalen Suwa
@@ -6,6 +6,8 @@
 - Dylan Boyer
 - Jonathan Cheng
 - Marvel McDowell
+
+# How we satisfied the software requirements
 
 ## [F0.a]
 
@@ -49,6 +51,6 @@ The spatial rules are handled within the plant file. Each plant has its predefin
 
 We added a function to the main file that calculates a score for the player. The player can gain points by sowing and reaping plants, but also lose points if they allow plants to die. The player gains 0.5 points per plant sown and 1 point per plant reaped. If they allow it to die then the player loses 1 point. The user will gain an extra 10 points if they have successfully grown 10 plants and they are all on the grid at the same time. The player will get one month to rack up as many points as they can. Once the game reaches the end of day 31, the game will end and the final score will be shown with an option to replay the game (this is not finished yet but it is planned to be implemented).
 
-## Reflection
+# Reflection
 
 Looking back at what we started with, we made quite a few significant changes to the game. When we initially started planning to make the game we started looking at making a 3d game with blender and unity. We realized that some of us hadn’t had the opportunity to work with those materials and in the initial stages of making the game we were not making much progress with unity. We ultimately decided on using HTML5 for the initial and switching the ThreeJS or another JS-based framework for the later stages of the project. As for decisions involving the actual game, there weren’t a lot of deviations from the original ideas that we had. F0 seemed very straight forward from the start. We made a few adjustments to what the actual plants were such as differences in shapes and colors, we also decided on having individual, separate bars to represent water and sunlight levels instead of having one connected line that would fluctuate. There have definitely been a few role swaps given everyone has individual situations going on, whether it be other classes, or life happening outside of the class but overall we are still finding ways to communicate, delegate, and get the work done. In hindsight, better overall communication and coordination is needed going forward in the following f-stages.
