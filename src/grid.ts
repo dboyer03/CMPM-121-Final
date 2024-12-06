@@ -6,8 +6,8 @@ import { Cell } from "./cell.ts";
 import { StatisticSubject, StatisticTracker } from "./statistic.ts";
 
 export class Grid extends StatisticSubject {
-  private width: number;
-  private height: number;
+  readonly width: number;
+  readonly height: number;
   private state: Uint8Array; // Byte array to store grid state
   private plants: Map<string, Plant>;
   private readonly INTERACTION_RANGE = 1; // adjacent cell range
@@ -71,7 +71,7 @@ export class Grid extends StatisticSubject {
     for (let y = 0; y < this.height; y++) {
       for (let x = 0; x < this.width; x++) {
         const pos = { x, y };
-        const key = this.getKey(pos);
+        const key = this.getPlantKey(pos);
         const cell = this.getCellProperties(pos);
         const plant = this.plants.get(key);
 
@@ -114,7 +114,7 @@ export class Grid extends StatisticSubject {
         this.setCellProperties(pos, cell);
       }
     }
-    this.statisticTracker.setMax("maxGridAlive", livingPlants);
+    this.statisticTracker.setIfMax("maxGridAlive", livingPlants);
   }
 
   isWithinRange(playerPos: Position, targetPos: Position): boolean {
@@ -124,7 +124,7 @@ export class Grid extends StatisticSubject {
   }
 
   sowPlant(pos: Position, type: string): boolean {
-    const key = this.getKey(pos);
+    const key = this.getPlantKey(pos);
     const cell = this.getCellProperties(pos);
     const plant = {
       type,
@@ -141,7 +141,7 @@ export class Grid extends StatisticSubject {
   }
 
   reapPlant(pos: Position): Plant | null {
-    const key = this.getKey(pos);
+    const key = this.getPlantKey(pos);
     const plant = this.plants.get(key);
     if (plant && plant.growthLevel === PlantTypeInfo[plant.type].maxGrowth) {
       this.plants.delete(key);
@@ -153,12 +153,12 @@ export class Grid extends StatisticSubject {
     return null;
   }
 
-  getKey(pos: Position): string {
+  getPlantKey(pos: Position): string {
     return `${pos.x},${pos.y}`;
   }
 
   getPlant(pos: Position): Plant | undefined {
-    return this.plants.get(this.getKey(pos));
+    return this.plants.get(this.getPlantKey(pos));
   }
 
   isValidPosition(pos: Position): boolean {

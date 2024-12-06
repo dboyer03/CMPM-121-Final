@@ -1,9 +1,6 @@
 // ====== Main + Imports ======
-import { Grid } from "./grid.ts";
-import { Player } from "./player.ts";
-import { DayManager } from "./day.ts";
+import { Game, GameConfig, StateManager } from "./state.ts";
 import { PlantAction, PlantTypeInfo } from "./plant.ts";
-import { StatisticTracker } from "./statistic.ts";
 
 import "./style.css";
 import "./game.css";
@@ -12,6 +9,10 @@ import "./game.css";
 const GAME_NAME = "CMPM 121 Final Project - Group 33";
 const GRID_SIZE = 10;
 const END_DAY = 31;
+const GAME_CONFIG: GameConfig = {
+  gridWidth: GRID_SIZE,
+  gridHeight: GRID_SIZE,
+};
 
 const app = document.querySelector<HTMLDivElement>("#app")!;
 
@@ -20,24 +21,11 @@ document.title = GAME_NAME;
 const title = document.createElement("h1");
 title.textContent = GAME_NAME;
 
-// ====== Game State ======
-interface Game {
-  statTracker: StatisticTracker;
-  grid: Grid;
-  player: Player;
-  dayManager: DayManager;
-}
+// ====== Initialize Game State ======
+const stateManager: StateManager = new StateManager();
+let game: Game = stateManager.newGame(GAME_CONFIG);
 
-function newGame(): Game {
-  const game: Partial<Game> = {};
-  game.statTracker = new StatisticTracker();
-  game.grid = new Grid(GRID_SIZE, GRID_SIZE, game.statTracker);
-  game.dayManager = new DayManager(game.grid);
-  game.player = new Player(game.grid, game.dayManager, { x: 0, y: 0 }, game.statTracker);
-
-  return game as Game;
-}
-
+// ====== Game Scoring ======
 function calculateScore(): number {
   let score = 0;
 
@@ -49,23 +37,7 @@ function calculateScore(): number {
   return score;
 }
 
-// Initialize game
-let game: Game = newGame();
-
-// ====== Check for Auto-Save ======
-function checkForAutoSave(): void {
-  const autoSave = localStorage.getItem("save_auto");
-  if (autoSave) {
-    const continueGame = confirm("Do you want to continue where you left off?");
-    if (continueGame) {
-      game.dayManager = DayManager.deserialize(autoSave, game.grid);
-      updateGridDisplay();
-      alert("Game loaded from auto-save.");
-    }
-  }
-}
-
-// ====== Game Grid ======
+// ====== Game Grid Display ======
 const gameGrid = document.createElement("div");
 gameGrid.id = "game-grid";
 gameGrid.style.gridTemplateColumns = `repeat(${GRID_SIZE}, 32px)`;
@@ -131,33 +103,6 @@ function updateGridDisplay(): void {
   }
 }
 
-// ====== Save and Load Functions ======
-function saveGame(slot: string): void {
-  const serializedState = game.dayManager.serialize();
-  localStorage.setItem(`save_${slot}`, serializedState);
-  alert(`Game saved to slot ${slot}`);
-}
-
-function loadGame(): void {
-  const slots = Object.keys(localStorage).filter(key => key.startsWith("save_"));
-  if (slots.length === 0) {
-    alert("No save slots available.");
-    return;
-  }
-
-  const slot = prompt(`Enter save slot name:\nAvailable slots:\n${slots.map(s => s.replace("save_", "")).join("\n")}`);
-  if (slot) {
-    const serializedState = localStorage.getItem(`save_${slot}`);
-    if (serializedState) {
-      game.dayManager = DayManager.deserialize(serializedState, game.grid);
-      updateGridDisplay();
-      alert(`Game loaded from slot ${slot}`);
-    } else {
-      alert(`No save found in slot ${slot}`);
-    }
-  }
-}
-
 // ====== Game HUD ======
 const gameHud = document.createElement("div");
 gameHud.id = "game-hud";
@@ -186,7 +131,6 @@ function updateScoreDisplay(): void {
   scoreDisplay.textContent = `Score: ${calculateScore()}`;
 }
 gameHud.appendChild(scoreDisplay);
-game.dayManager.addPostDayCallback(updateScoreDisplay);
 
 // ====== HUD: Day Button ======
 const dayControls = document.createElement("div");
@@ -197,10 +141,16 @@ dayCounter.textContent = `Day: ${game.dayManager.getCurrentDay()}`;
 dayCounter.style.marginBottom = "10px";
 
 const advanceDayButton = document.createElement("button");
-advanceDayButton.textContent = "Next Day";
+advanceDayButton.textContent = "Finish Day";
 
 function updateDayDisplay(): void {
   dayCounter.textContent = `Day: ${game.dayManager.getCurrentDay()}`;
+}
+
+function updateAllDisplays(): void {
+  updateGridDisplay();
+  updateDayDisplay();
+  updateScoreDisplay();
 }
 
 advanceDayButton.onclick = () => {
@@ -208,20 +158,62 @@ advanceDayButton.onclick = () => {
   if (game.dayManager.getCurrentDay() >= END_DAY) {
     alert("Game Over! Your final score is: " + calculateScore());
 
-    game = newGame();
-    game.dayManager.addPostDayCallback(updateScoreDisplay);
-    updateGridDisplay();
-    updateDayDisplay();
-    updateScoreDisplay();
+    game = stateManager.newGame(GAME_CONFIG);
+    updateAllDisplays();
+    stateManager.clearSaves();
 
     return;
   }
 
   // Next day
   game.dayManager.advanceDay();
-  dayCounter.textContent = `Day: ${game.dayManager.getCurrentDay()}`;
-  updateGridDisplay();
+  stateManager.autoSave(game);
+  updateAllDisplays();
 };
+
+// ====== Save and Load Handlers ======
+function handleSave(slot: string): void {
+  if (stateManager.trySaveGame(game, slot)) {
+    alert(`Game saved to slot ${slot}`);
+  } else {
+    alert(`Failed to save game to slot ${slot}. Insufficient storage space.`);
+  }
+}
+
+function handleLoad(): void {
+  const slots = StateManager.getSaveSlots();
+  if (slots.length === 0) {
+    alert("No save slots available.");
+    return;
+  }
+
+  const slot = prompt(
+    `Enter save slot name:\nAvailable slots:\n${
+      slots.map((s) => s.replace("save_", "")).join("\n")
+    }`,
+  );
+  if (slot) {
+    const loadSave = stateManager.tryLoadSave(slot);
+    if (loadSave) {
+      game = loadSave;
+      updateAllDisplays();
+      alert(`Game loaded from slot ${slot}`);
+    } else {
+      alert(`No save found in slot ${slot}`);
+    }
+  }
+}
+
+function checkForAutoSave(): void {
+  if (StateManager.getSaveSlots().includes(StateManager.AUTO_SLOT)) {
+    const continueGame = confirm("Do you want to continue where you left off?");
+    if (continueGame) {
+      game = stateManager.tryLoadSave(StateManager.AUTO_SLOT)!;
+      updateAllDisplays();
+      alert("Game loaded from auto-save.");
+    }
+  }
+}
 
 // ====== Save and Load Buttons ======
 const saveButton = document.createElement("button");
@@ -229,34 +221,38 @@ saveButton.textContent = "Save Game";
 saveButton.onclick = () => {
   const slot = prompt("Enter save slot name:");
   if (slot) {
-    saveGame(slot);
+    handleSave(slot);
   }
 };
 
 const loadButton = document.createElement("button");
 loadButton.textContent = "Load Game";
 loadButton.onclick = () => {
-  loadGame();
+  handleLoad();
 };
 
 // ====== Undo and Redo Buttons ======
 const undoButton = document.createElement("button");
-undoButton.textContent = "Undo";
+undoButton.textContent = "Previous Day Checkpoint";
 undoButton.onclick = () => {
-  if (game.dayManager.undo()) {
-    updateGridDisplay();
+  const undoState = stateManager.getUndo();
+  if (undoState !== null) {
+    game = undoState;
+    updateAllDisplays();
   } else {
-    alert("No more actions to undo.");
+    alert("No more checkpoints to undo.");
   }
 };
 
 const redoButton = document.createElement("button");
-redoButton.textContent = "Redo";
+redoButton.textContent = "Next Day Checkpoint";
 redoButton.onclick = () => {
-  if (game.dayManager.redo()) {
-    updateGridDisplay();
+  const redoState = stateManager.getRedo();
+  if (redoState !== null) {
+    game = redoState;
+    updateAllDisplays();
   } else {
-    alert("No more actions to redo.");
+    alert("No more checkpoints to redo.");
   }
 };
 
@@ -286,9 +282,13 @@ const instructions = document.createElement("div");
   }
 
   // TODO: Describe mechanics and limitations (e.g. player reach, plant growth, water/sunlight, etc.)
-  description.textContent =
+  description.innerText =
     `Click the cells current or adjacent to the farmer to sow or reap plants. \
-    Click the Next Day button to advance the day. Plants require water and sunlight to grow. \
+    Click the Finish Day button to end your turn and advance the day. \
+    You can use the Previous and Next Day Checkpoint buttons if you want to undo or redo a day. \
+    The game autosaves every time you finish a day, but you can also manually create saves. \
+    \n
+    Plants require water and sunlight to grow. \
     Different plants have different requirements (see below). \
     Don't overcrowd plants or they will die (Black squares, reap to clear). \
     See how high of a score you can get in ${END_DAY} days!`;
@@ -356,8 +356,6 @@ app.appendChild(title);
 app.appendChild(gameGrid);
 app.appendChild(gameHud);
 app.appendChild(instructions);
-updateGridDisplay();
-updateScoreDisplay();
+updateAllDisplays();
 
-// ====== Check for Auto-Save on Launch ======
-checkForAutoSave();
+checkForAutoSave(); // Check for auto-save on launch
