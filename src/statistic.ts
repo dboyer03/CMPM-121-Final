@@ -13,14 +13,38 @@ export class StatisticTracker {
   /**
    * Create a StatisticTracker.
    */
-  constructor() {
-    this.statistics = new Map<StatisticName, StatisticValue>([
-      ["playerTraveled", 0],
-      ["maxGridAlive", 0],
-      ["plantSown", new Map<string, number>()],
-      ["plantReaped", new Map<string, number>()],
-      ["plantDied", new Map<string, number>()],
-    ]);
+  constructor(statistics?: [StatisticName, number | [string, number][]][]) {
+    if (statistics) {
+      // Reconstruct from array form
+      this.statistics = new Map<StatisticName, StatisticValue>(
+        statistics.map(([key, value]) => {
+          if (Array.isArray(value)) {
+            return [key, new Map<string, number>(value)];
+          }
+          return [key, value];
+        }),
+      );
+    } else {
+      this.statistics = new Map<StatisticName, StatisticValue>([
+        ["playerTraveled", 0],
+        ["maxGridAlive", 0],
+        ["plantSown", new Map<string, number>()],
+        ["plantReaped", new Map<string, number>()],
+        ["plantDied", new Map<string, number>()],
+      ]);
+    }
+  }
+
+  /** Returns a copy of all statistics as array */
+  getStatisticsArray(): [StatisticName, number | [string, number][]][] {
+    // Perform deep copy and conversion to array
+    const copy = new Map<StatisticName, (number | [string, number][])>();
+    for (const [key, value] of this.statistics) {
+      copy.set(key, (typeof value === "number") ? value : Array.from(value));
+    }
+    const arr = Array.from(copy);
+
+    return arr;
   }
 
   /** Gets the value of a statistic. */
@@ -63,7 +87,7 @@ export class StatisticTracker {
   }
 
   /** Sets a max statistic if the new value is greater than the current value. */
-  setMax(statistic: StatisticName, value: number, key?: string): void {
+  setIfMax(statistic: StatisticName, value: number, key?: string): void {
     const currentValue = this.statistics.get(statistic); // checks if stat exists
     if (currentValue !== undefined) {
       if (typeof currentValue === "number") { // checks if stat is a number

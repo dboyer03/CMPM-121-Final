@@ -3,19 +3,16 @@
 import { Position } from "./position.ts";
 import { Grid } from "./grid.ts";
 import { PlantAction } from "./plant.ts";
-import { DayManager } from "./day.ts";
 import { StatisticSubject, StatisticTracker } from "./statistic.ts";
 
 export class Player extends StatisticSubject {
   private position: Position;
   private grid: Grid;
-  private dayManager: DayManager;
   private currentPlantType: string = "green-circle";
 
-  constructor(grid: Grid, dayManager: DayManager, startPos: Position, statTracker: StatisticTracker) {
+  constructor(grid: Grid, startPos: Position, statTracker: StatisticTracker) {
     super(statTracker);
     this.grid = grid;
-    this.dayManager = dayManager;
     this.position = startPos;
   }
 
@@ -40,7 +37,6 @@ export class Player extends StatisticSubject {
     if (this.grid.isValidPosition(newPos)) {
       this.position = newPos;
       this.statisticTracker.increment("playerTraveled");
-      this.dayManager.saveState();
       return true;
     }
     return false;
@@ -68,10 +64,6 @@ export class Player extends StatisticSubject {
       result = this.grid.sowPlant(targetPos, this.currentPlantType);
     } else {
       result = this.grid.reapPlant(targetPos) !== null;
-    }
-
-    if (result) {
-      this.dayManager.saveState();
     }
 
     return result;
