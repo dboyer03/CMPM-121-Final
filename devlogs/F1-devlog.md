@@ -57,7 +57,7 @@ Same as last week
 
 We use an Array-of-Structures (AoS) format for our grid state. Each cell in the grid is represented by two bytes: one for water level and one for sunlight level. This is implemented in the Grid class in src/grid.ts. The byte array is updated every turn to reflect the current state of the grid.
 
-![F1.a data structure diagram](./devlogs/images/F1.a_diagram.png)
+![F1.a data structure diagram](./images/F1.a_diagram.png)
 
 ## [F1.b]
 

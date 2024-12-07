@@ -1,6 +1,6 @@
 # CMPM 121 Group 33 Final
 
-## Devlogs can be found [here](./devlogs)
+## Devlogs can be found [HERE](./devlogs)
 
 ## Introducing the team
 
