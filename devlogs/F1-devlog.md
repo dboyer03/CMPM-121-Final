@@ -57,6 +57,7 @@ Same as last week
 
 The grid state contains “structs” of 4 byte values for each grid square. The Cell interface takes two of those bytes and as water and sunlight number values (max values of 5 and 3, respectively), and the Plant interface takes the other two as the plant type (a number converted to an enum value between 0-255 inclusive and used to index into an array) and the growth level number (max value of three). There are as many of these 4 byte groups as there are grid squares.
 
+
 ![F1.a data structure diagram](./images/F1.a_diagram.png)
 
 ## [F1.b]
@@ -80,4 +81,3 @@ We decided to count each turn (day) as a “major choice” so that we could com
 # Reflection
 
 Looking back on how we achieved the new F1 requirements, our team's plan has evolved significantly. Initially, we did not consider the complexity of implementing a contiguous byte array for the grid state. This requirement pushed us to rethink our data structures and optimize memory usage. We also had to enhance our save and load mechanisms to support multiple save slots and auto-save functionality. Our game design has evolved to provide more feedback to the player, such as prompts for auto-save recovery and visual indicators for undo and redo actions. These changes have improved the overall user experience and made the game more robust. However, we look forward to further improving player feedback due to player inputs which we believe will be easier on the alternate interface platform we will be switching to. Our roles have also shifted slightly, with team members taking on new responsibilities to address these additional requirements. This experience has reinforced the importance of adaptability and collaboration in game development.
-
