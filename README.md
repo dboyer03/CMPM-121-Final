@@ -22,11 +22,11 @@ __Tell us programming languages (e.g. TypeScript) and data languages (e.g. JSON)
 
 __Tell us about which tools you expect to use in the process of authoring your project. You might name the IDE for writing code, the image editor for creating visual assets, or the 3D editor you will use for building your scene. Again, briefly tell us why you made these choices. Maybe one of your teammates feels especially skilled in that tool or it represents something you all want to learn about.__
 
-- We will be using Git for version control and VS Studio + VS Code for scripting. We are also using Deno for its modern runtime capabilities and Vite for its fast build and development server.
+- We will be using Git for version control and VS Studio + VS Code for scripting. We are also using Deno for its modern runtime capabilities and built-in lint and style checking and Vite for its fast build and development server. For further coordination, we communicate on the Discord messaging platform and use GSuite tools for collaborative ideation, design, and documentation.
 
 __Tell us about your alternate platform choice. Remember, your alternate platform must differ from your primary platform by either changing the primary primarily language used or the engine/library/framework used for building your user interface.__
 
-- We will plan to transfer to another JS framework like React or Vue to minimize the amount of porting that needs to be done while still leveraging the benefits of a modern framework.
+- We will plan to transfer to another JS framework like Phaser to minimize the amount of porting that needs to be done while still leveraging the benefits of a modern framework. We are all somewhat familiar with using Phaser and the continued JS backend will allow us to keep a lot of the code while still being able to create a more interactive and customizable interface. We will continue to use Typescript with Deno.
 
 ## Outlook
 
