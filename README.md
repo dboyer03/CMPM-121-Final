@@ -1,4 +1,6 @@
-# CMPM-121-G33-Final
+# CMPM 121 Group 33 Final
+
+## Devlogs can be found [HERE](./devlogs)
 
 ## Introducing the team
 
