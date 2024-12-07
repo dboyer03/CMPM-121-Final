@@ -31,11 +31,15 @@ interface SaveData {
 export class StateManager {
   static readonly AUTO_SLOT: string = "auto";
   private history: string[];
-  private future: string[];
+  private current: number; // points to index of current save state=
 
   constructor() {
     this.history = [];
-    this.future = [];
+    this.current = -1;
+  }
+
+  isInitialized(): boolean {
+    return this.history.length > 0 && this.current >= 0;
   }
 
   newGame(config: GameConfig): Game {
@@ -48,7 +52,7 @@ export class StateManager {
     game.player = new Player(game.grid, { x: 0, y: 0 }, game.statTracker);
 
     const fullGame: Game = game as Game;
-    this.saveToHistory(fullGame); // save initial state
+    this.pushToHistory(fullGame); // save initial state
 
     return fullGame;
   }
@@ -87,32 +91,47 @@ export class StateManager {
     return game as Game;
   }
 
-  private saveToHistory(game: Game): StateManager {
+  private pushToHistory(game: Game): StateManager {
+    if ((this.current + 1) < this.history.length) {
+      // if it exists, remove future
+      this.history.splice(this.current + 1, Infinity);
+    }
     this.history.push(StateManager.serialize(game));
-    this.future = []; // Clear the future states when a new save is made
+    this.current = this.history.length - 1;
     return this;
   }
 
+  getInitialState(): Game | null {
+    return (this.history.length > 0)
+      ? StateManager.deserialize(this.history[0])
+      : null;
+  }
+
   getUndo(): Game | null {
-    if (this.history.length > 0) {
-      const previousState: string = this.history.pop()!;
-      this.future.push(previousState);
+    if (this.current >= 0) {
+      const previousState: string = this.history[--this.current];
       return StateManager.deserialize(previousState);
     }
     return null;
   }
 
   getRedo(): Game | null {
-    if (this.future.length > 0) {
-      const nextState = this.future.pop()!;
-      this.history.push(nextState);
+    if (
+      (this.history.length > 0) && ((this.current + 1) < this.history.length)
+    ) {
+      const nextState = this.history[++this.current];
       return StateManager.deserialize(nextState);
     }
     return null;
   }
 
+  clearHistory(): void {
+    this.history = [];
+    this.current = -1;
+  }
+
   trySaveGame(game: Game, slot: string): boolean {
-    this.saveToHistory(game);
+    this.pushToHistory(game);
     const serializedHistory = JSON.stringify(this.history);
     try {
       localStorage.setItem(`save_${slot}`, serializedHistory);
@@ -140,20 +159,10 @@ export class StateManager {
     const saveData = localStorage.getItem(`save_${slot}`);
     if (saveData === null) return null;
     this.history = JSON.parse(saveData);
-    const currentState: string | undefined = this.history.pop();
+    this.current = this.history.length - 1;
 
-    return (currentState !== undefined)
-      ? StateManager.deserialize(currentState)
+    return (this.isInitialized())
+      ? StateManager.deserialize(this.history[this.current])
       : null;
-  }
-
-  clearSaves(): void {
-    this.history = [];
-    this.future = [];
-    Object.keys(localStorage).forEach((key) => {
-      if (key.startsWith("save_")) {
-        localStorage.removeItem(key);
-      }
-    });
   }
 }

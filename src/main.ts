@@ -160,7 +160,7 @@ advanceDayButton.onclick = () => {
 
     game = stateManager.newGame(GAME_CONFIG);
     updateAllDisplays();
-    stateManager.clearSaves();
+    stateManager.clearHistory();
 
     return;
   }
@@ -233,26 +233,30 @@ loadButton.onclick = () => {
 
 // ====== Undo and Redo Buttons ======
 const undoButton = document.createElement("button");
-undoButton.textContent = "Previous Day Checkpoint";
+undoButton.textContent = "Undo Checkpoint";
 undoButton.onclick = () => {
   const undoState = stateManager.getUndo();
   if (undoState !== null) {
     game = undoState;
     updateAllDisplays();
+  } else if (stateManager.isInitialized()) {
+    game = stateManager.getInitialState()!;
+    alert("Reset to initial state. No more days to undo.");
   } else {
-    alert("No more checkpoints to undo.");
+    alert("No more days to undo.");
+    console.error("StateManger not initialized");
   }
 };
 
 const redoButton = document.createElement("button");
-redoButton.textContent = "Next Day Checkpoint";
+redoButton.textContent = "Redo Checkpoint";
 redoButton.onclick = () => {
   const redoState = stateManager.getRedo();
   if (redoState !== null) {
     game = redoState;
     updateAllDisplays();
   } else {
-    alert("No more checkpoints to redo.");
+    alert("No more days to redo.");
   }
 };
 
@@ -284,9 +288,9 @@ const instructions = document.createElement("div");
   // TODO: Describe mechanics and limitations (e.g. player reach, plant growth, water/sunlight, etc.)
   description.innerText =
     `Click the cells current or adjacent to the farmer to sow or reap plants. \
-    Click the Finish Day button to end your turn and advance the day. \
-    You can use the Previous and Next Day Checkpoint buttons if you want to undo or redo a day. \
-    The game autosaves every time you finish a day, but you can also manually create saves. \
+    Click the Finish Day button to end your turn, advance the day, and autosave. \
+    You can use the Undo and Redo Checkpoint buttons if you want to replay a day/checkpoint. \
+    You can also manually create and load saves mid-day, creating more checkpoints for extra granularity. \
     \n
     Plants require water and sunlight to grow. \
     Different plants have different requirements (see below). \
