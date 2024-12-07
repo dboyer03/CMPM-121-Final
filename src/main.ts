@@ -239,11 +239,11 @@ undoButton.onclick = () => {
   const undoState = stateManager.getUndo();
   if (undoState !== null) {
     game = undoState;
-    updateAllDisplays();
   } else {
     game = stateManager.getInitialState()!;
-    alert("Reset to initial state. No more days to undo.");
+    alert("Resetting to initial state. No more days to undo.");
   }
+  updateAllDisplays();
 };
 
 const redoButton = document.createElement("button");
