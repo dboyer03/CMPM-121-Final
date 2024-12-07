@@ -20,7 +20,7 @@ export interface Game {
 
 interface Checkpoint {
   statistics: [StatisticName, (number | [PlantType, number][])][];
-  gridState: number[]; // array of 4-byte structs represent cell and plant states
+  gridState: string; // base64-encoded Uint8Array of 4-byte structs represent cell and plant states
   playerPosition: Position;
   dayCount: number;
 }
@@ -47,12 +47,19 @@ export class StateManager {
   }
 
   private static createCheckpoint(game: Game): Checkpoint {
-    return {
+    const checkpoint: Checkpoint = {
       statistics: game.statTracker.getStatisticsArray(),
-      gridState: Array.from(game.grid.getState()),
+      gridState: btoa(
+        game.grid.getState().reduce(
+          (acc, val) => acc + String.fromCharCode(val),
+          "",
+        ),
+      ),
       playerPosition: game.player.getPosition(),
       dayCount: game.dayManager.getCurrentDay(),
     };
+
+    return checkpoint;
   }
 
   private loadCheckpoint(checkpoint: Checkpoint): Game {
@@ -64,7 +71,9 @@ export class StateManager {
       this.config!.gridHeight,
       game.statTracker,
     );
-    game.grid.setState(new Uint8Array(checkpoint.gridState));
+    game.grid.setState(
+      Uint8Array.from(atob(checkpoint.gridState), (c) => c.charCodeAt(0)),
+    );
     game.dayManager = new DayManager(game.grid, checkpoint.dayCount, true);
     game.player = new Player(
       game.grid,
@@ -109,11 +118,11 @@ export class StateManager {
     if (this.isGameLoaded()) {
       return this.loadCheckpoint(this.history[0]);
     }
-    throw new Error("StateManager not initialized.");
+    throw new Error("No game loaded.");
   }
 
   getUndo(): Game | null {
-    if (this.current >= 0) {
+    if (this.current > 0) {
       return this.loadCheckpoint(this.history[--this.current]);
     }
     return null;
