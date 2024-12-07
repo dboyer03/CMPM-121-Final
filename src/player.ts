@@ -2,13 +2,13 @@
 
 import { Position } from "./position.ts";
 import { Grid } from "./grid.ts";
-import { PlantAction } from "./plant.ts";
+import { PlantAction, PlantType } from "./plant.ts";
 import { StatisticSubject, StatisticTracker } from "./statistic.ts";
 
 export class Player extends StatisticSubject {
   private position: Position;
   private grid: Grid;
-  private currentPlantType: string = "green-circle";
+  private currentPlantType: PlantType = PlantType.GREEN_CIRCLE;
 
   constructor(grid: Grid, startPos: Position, statTracker: StatisticTracker) {
     super(statTracker);
@@ -46,11 +46,11 @@ export class Player extends StatisticSubject {
     return { ...this.position };
   }
 
-  setPlantType(type: string) {
+  setPlantType(type: PlantType) {
     this.currentPlantType = type;
   }
 
-  getCurrentPlantType(): string {
+  getCurrentPlantType(): PlantType {
     return this.currentPlantType;
   }
 
