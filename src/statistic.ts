@@ -1,10 +1,12 @@
+import { PlantType } from "./plant.ts";
+
 export type StatisticName =
   | "playerTraveled" // steps taken
   | "maxGridAlive" // max number of live plants on the grid
   | "plantSown"
   | "plantReaped"
   | "plantDied";
-type StatisticValue = number | Map<string, number>;
+type StatisticValue = number | Map<PlantType, number>;
 
 /** A class for tracking game statistics. */
 export class StatisticTracker {
@@ -13,13 +15,13 @@ export class StatisticTracker {
   /**
    * Create a StatisticTracker.
    */
-  constructor(statistics?: [StatisticName, number | [string, number][]][]) {
+  constructor(statistics?: [StatisticName, number | [PlantType, number][]][]) {
     if (statistics) {
       // Reconstruct from array form
       this.statistics = new Map<StatisticName, StatisticValue>(
         statistics.map(([key, value]) => {
           if (Array.isArray(value)) {
-            return [key, new Map<string, number>(value)];
+            return [key, new Map<PlantType, number>(value)];
           }
           return [key, value];
         }),
@@ -28,17 +30,17 @@ export class StatisticTracker {
       this.statistics = new Map<StatisticName, StatisticValue>([
         ["playerTraveled", 0],
         ["maxGridAlive", 0],
-        ["plantSown", new Map<string, number>()],
-        ["plantReaped", new Map<string, number>()],
-        ["plantDied", new Map<string, number>()],
+        ["plantSown", new Map<PlantType, number>()],
+        ["plantReaped", new Map<PlantType, number>()],
+        ["plantDied", new Map<PlantType, number>()],
       ]);
     }
   }
 
   /** Returns a copy of all statistics as array */
-  getStatisticsArray(): [StatisticName, number | [string, number][]][] {
+  getStatisticsArray(): [StatisticName, number | [PlantType, number][]][] {
     // Perform deep copy and conversion to array
-    const copy = new Map<StatisticName, (number | [string, number][])>();
+    const copy = new Map<StatisticName, (number | [PlantType, number][])>();
     for (const [key, value] of this.statistics) {
       copy.set(key, (typeof value === "number") ? value : Array.from(value));
     }
@@ -48,7 +50,7 @@ export class StatisticTracker {
   }
 
   /** Gets the value of a statistic. */
-  get(statistic: StatisticName, key?: string): number | null {
+  get(statistic: StatisticName, key?: PlantType): number | null {
     const value = this.statistics.get(statistic);
     if (value === undefined) {
       return null;
@@ -72,7 +74,7 @@ export class StatisticTracker {
   }
 
   /** Increments a statistic by 1. */
-  increment(statistic: StatisticName, key?: string): void {
+  increment(statistic: StatisticName, key?: PlantType): void {
     const value = this.statistics.get(statistic);
     if (value === undefined) {
       return;
@@ -87,7 +89,7 @@ export class StatisticTracker {
   }
 
   /** Sets a max statistic if the new value is greater than the current value. */
-  setIfMax(statistic: StatisticName, value: number, key?: string): void {
+  setIfMax(statistic: StatisticName, value: number, key?: PlantType): void {
     const currentValue = this.statistics.get(statistic); // checks if stat exists
     if (currentValue !== undefined) {
       if (typeof currentValue === "number") { // checks if stat is a number

@@ -2,7 +2,7 @@ import { StatisticName, StatisticTracker } from "./statistic.ts";
 import { Grid } from "./grid.ts";
 import { Player } from "./player.ts";
 import { DayManager } from "./day.ts";
-import { Plant } from "./plant.ts";
+import { PlantType } from "./plant.ts";
 import { Position } from "./position.ts";
 
 export interface GameConfig {
@@ -12,110 +12,136 @@ export interface GameConfig {
 }
 
 export interface Game {
-  readonly config: GameConfig;
   statTracker: StatisticTracker;
   grid: Grid;
   dayManager: DayManager;
   player: Player;
 }
 
-interface SaveData {
-  config: GameConfig;
-  statistics: [StatisticName, (number | [string, number][])][];
-  gridState: number[];
-  plants: [string, Plant][];
+interface Checkpoint {
+  statistics: [StatisticName, (number | [PlantType, number][])][];
+  gridState: number[]; // array of 4-byte structs represent cell and plant states
   playerPosition: Position;
   dayCount: number;
 }
 
+interface SaveData {
+  config: GameConfig;
+  history: Checkpoint[];
+}
+
 export class StateManager {
   static readonly AUTO_SLOT: string = "auto";
-  private history: string[];
-  private future: string[];
+  private history: Checkpoint[];
+  private current: number; // points to index of current save state
+  private config: GameConfig;
 
-  constructor() {
+  constructor(config: GameConfig) {
     this.history = [];
-    this.future = [];
+    this.current = -1;
+    this.config = config;
   }
 
-  newGame(config: GameConfig): Game {
-    this.history = [];
-
-    const game: Partial<Game> = { config };
-    game.statTracker = new StatisticTracker();
-    game.grid = new Grid(config.gridWidth, config.gridHeight, game.statTracker);
-    game.dayManager = new DayManager(game.grid);
-    game.player = new Player(game.grid, { x: 0, y: 0 }, game.statTracker);
-
-    const fullGame: Game = game as Game;
-    this.saveToHistory(fullGame); // save initial state
-
-    return fullGame;
+  isGameLoaded(): boolean { // auto-initializes after running newGame
+    return this.history.length > 0 && this.current >= 0;
   }
 
-  private static serialize(game: Game): string {
-    const saveData: SaveData = {
-      config: game.config,
+  private static createCheckpoint(game: Game): Checkpoint {
+    return {
       statistics: game.statTracker.getStatisticsArray(),
       gridState: Array.from(game.grid.getState()),
-      plants: Array.from(game.grid.getPlants()),
       playerPosition: game.player.getPosition(),
       dayCount: game.dayManager.getCurrentDay(),
     };
-    return JSON.stringify(saveData);
   }
 
-  private static deserialize(data: string): Game {
-    const saveData: SaveData = JSON.parse(data);
-    const game: Partial<Game> = { config: saveData.config };
+  private loadCheckpoint(checkpoint: Checkpoint): Game {
+    const game: Partial<Game> = {};
 
-    game.statTracker = new StatisticTracker(saveData.statistics);
+    game.statTracker = new StatisticTracker(checkpoint.statistics);
     game.grid = new Grid(
-      saveData.config.gridWidth,
-      saveData.config.gridHeight,
+      this.config!.gridWidth,
+      this.config!.gridHeight,
       game.statTracker,
     );
-    game.grid.setState(new Uint8Array(saveData.gridState));
-    game.grid.setPlants(new Map(saveData.plants));
-    game.dayManager = new DayManager(game.grid, saveData.dayCount, true);
+    game.grid.setState(new Uint8Array(checkpoint.gridState));
+    game.dayManager = new DayManager(game.grid, checkpoint.dayCount, true);
     game.player = new Player(
       game.grid,
-      saveData.playerPosition,
+      checkpoint.playerPosition,
       game.statTracker,
     );
 
     return game as Game;
   }
 
-  private saveToHistory(game: Game): StateManager {
-    this.history.push(StateManager.serialize(game));
-    this.future = []; // Clear the future states when a new save is made
+  private pushToHistory(game: Game): StateManager {
+    if ((this.current + 1) < this.history.length) {
+      // if it exists, remove future
+      this.history.splice(this.current + 1, Infinity);
+    }
+    this.history.push(StateManager.createCheckpoint(game));
+    this.current = this.history.length - 1;
     return this;
   }
 
+  newGame(config?: GameConfig): Game {
+    if (config !== undefined) config = this.config;
+    this.history = [];
+
+    const game: Partial<Game> = {};
+    game.statTracker = new StatisticTracker();
+    game.grid = new Grid(
+      this.config.gridWidth,
+      this.config.gridHeight,
+      game.statTracker,
+    );
+    game.dayManager = new DayManager(game.grid);
+    game.player = new Player(game.grid, { x: 0, y: 0 }, game.statTracker);
+
+    const fullGame: Game = game as Game;
+    this.pushToHistory(fullGame); // save initial state
+
+    return fullGame;
+  }
+
+  getInitialState(): Game | null {
+    if (this.isGameLoaded()) {
+      return this.loadCheckpoint(this.history[0]);
+    }
+    throw new Error("StateManager not initialized.");
+  }
+
   getUndo(): Game | null {
-    if (this.history.length > 0) {
-      const previousState: string = this.history.pop()!;
-      this.future.push(previousState);
-      return StateManager.deserialize(previousState);
+    if (this.current >= 0) {
+      return this.loadCheckpoint(this.history[--this.current]);
     }
     return null;
   }
 
   getRedo(): Game | null {
-    if (this.future.length > 0) {
-      const nextState = this.future.pop()!;
-      this.history.push(nextState);
-      return StateManager.deserialize(nextState);
+    if (
+      this.history.length > 0 &&
+      ((this.current + 1) < this.history.length)
+    ) {
+      return this.loadCheckpoint(this.history[++this.current]);
     }
     return null;
   }
 
+  clearHistory(): void {
+    this.history = [];
+    this.current = -1;
+  }
+
   trySaveGame(game: Game, slot: string): boolean {
-    this.saveToHistory(game);
-    const serializedHistory = JSON.stringify(this.history);
+    this.pushToHistory(game);
+    const saveData: SaveData = {
+      config: this.config,
+      history: this.history,
+    };
     try {
-      localStorage.setItem(`save_${slot}`, serializedHistory);
+      localStorage.setItem(`save_${slot}`, JSON.stringify(saveData));
     } catch (e) {
       if (e instanceof DOMException && e.name === "QuotaExceededError") {
         return false;
@@ -137,23 +163,17 @@ export class StateManager {
   }
 
   tryLoadSave(slot: string): Game | null {
-    const saveData = localStorage.getItem(`save_${slot}`);
+    const jsonSave: string | null = localStorage.getItem(`save_${slot}`);
+    if (jsonSave === null) return null;
+
+    const saveData: SaveData = JSON.parse(jsonSave);
     if (saveData === null) return null;
-    this.history = JSON.parse(saveData);
-    const currentState: string | undefined = this.history.pop();
+    this.config = saveData.config;
+    this.history = saveData.history;
+    this.current = this.history.length - 1;
 
-    return (currentState !== undefined)
-      ? StateManager.deserialize(currentState)
+    return (this.isGameLoaded())
+      ? this.loadCheckpoint(this.history[this.current])
       : null;
-  }
-
-  clearSaves(): void {
-    this.history = [];
-    this.future = [];
-    Object.keys(localStorage).forEach((key) => {
-      if (key.startsWith("save_")) {
-        localStorage.removeItem(key);
-      }
-    });
   }
 }

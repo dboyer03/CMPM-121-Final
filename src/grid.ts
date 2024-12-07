@@ -1,15 +1,20 @@
 // grid
 
 import { Position } from "./position.ts";
-import { canGrow, Plant, PlantTypeInfo } from "./plant.ts";
-import { Cell } from "./cell.ts";
+import { canGrow, Plant, PlantType, PlantTypeInfo } from "./plant.ts";
 import { StatisticSubject, StatisticTracker } from "./statistic.ts";
+
+interface Cell {
+  water: number;
+  sunlight: number;
+}
+
+const CELL_PLANT_WIDTH = 4;
 
 export class Grid extends StatisticSubject {
   readonly width: number;
   readonly height: number;
   private state: Uint8Array; // Byte array to store grid state
-  private plants: Map<string, Plant>;
   private readonly INTERACTION_RANGE = 1; // adjacent cell range
   private readonly MAX_WATER = 5; // max water
   private readonly MAX_RAIN = 2; // max water increase per tick
@@ -20,21 +25,23 @@ export class Grid extends StatisticSubject {
     super(statTracker);
     this.width = width;
     this.height = height;
-    this.state = new Uint8Array(width * height * 2); // Each cell has water and sunlight
-    this.plants = new Map();
+    this.state = new Uint8Array(width * height * CELL_PLANT_WIDTH);
+    // Each cell has water, sunlight, plant type, and growth level as 1 byte each
 
     // Initialize state
-    for (let i = 0; i < this.state.length; i += 2) {
+    for (let i = 0; i < this.state.length; i += CELL_PLANT_WIDTH) {
       this.state[i] = 0; // water
       this.state[i + 1] = 0; // sunlight
+      this.state[i + 2] = PlantType.NONE; // plant type
+      this.state[i + 3] = 0; // growth level
     }
   }
 
   private getIndex(pos: Position): number {
-    return (pos.y * this.width + pos.x) * 2;
+    return (pos.y * this.width + pos.x) * CELL_PLANT_WIDTH;
   }
 
-  getCellProperties(pos: Position): Cell {
+  getCell(pos: Position): Cell {
     const index = this.getIndex(pos);
     return {
       water: this.state[index],
@@ -42,10 +49,24 @@ export class Grid extends StatisticSubject {
     };
   }
 
-  setCellProperties(pos: Position, cell: Cell): void {
+  getPlant(pos: Position): Plant {
+    const index = this.getIndex(pos);
+    return {
+      type: this.state[index + 2],
+      growthLevel: this.state[index + 3],
+    };
+  }
+
+  setCell(pos: Position, cell: Cell): void {
     const index = this.getIndex(pos);
     this.state[index] = cell.water;
     this.state[index + 1] = cell.sunlight;
+  }
+
+  setPlant(pos: Position, plant: Plant): void {
+    const index = this.getIndex(pos);
+    this.state[index + 2] = plant.type;
+    this.state[index + 3] = plant.growthLevel;
   }
 
   getState(): Uint8Array {
@@ -56,24 +77,15 @@ export class Grid extends StatisticSubject {
     this.state = state;
   }
 
-  getPlants(): Map<string, Plant> {
-    return this.plants;
-  }
-
-  setPlants(plants: Map<string, Plant>): void {
-    this.plants = plants;
-  }
-
   updateEnvironment(): void {
     let livingPlants = 0;
 
     // update cell resources
     for (let y = 0; y < this.height; y++) {
       for (let x = 0; x < this.width; x++) {
-        const pos = { x, y };
-        const key = this.getPlantKey(pos);
-        const cell = this.getCellProperties(pos);
-        const plant = this.plants.get(key);
+        const pos: Position = { x, y };
+        const cell: Cell = this.getCell(pos);
+        const plant: Plant = this.getPlant(pos);
 
         // update water (rain)
         if (cell.water < this.MAX_WATER) {
@@ -90,7 +102,9 @@ export class Grid extends StatisticSubject {
         cell.sunlight = Math.floor(Math.random() * (this.MAX_SUNLIGHT + 1));
 
         // update plant
-        if (plant) {
+        if (
+          plant.type !== PlantType.NONE && plant.type !== PlantType.WITHERED
+        ) {
           // update plant growth
           if (canGrow(plant, cell.water, cell.sunlight)) {
             plant.growthLevel++;
@@ -104,14 +118,14 @@ export class Grid extends StatisticSubject {
           ) {
             // kill plant
             this.statisticTracker.increment("plantDied", plant.type); // notify before modification
-            this.plants.set(key, { type: "withered", growthLevel: 1 });
+            this.setPlant(pos, { type: PlantType.WITHERED, growthLevel: 1 });
           } else {
             // plant didn't die
             livingPlants++;
           }
         }
 
-        this.setCellProperties(pos, cell);
+        this.setCell(pos, cell);
       }
     }
     this.statisticTracker.setIfMax("maxGridAlive", livingPlants);
@@ -123,42 +137,38 @@ export class Grid extends StatisticSubject {
     return dx <= this.INTERACTION_RANGE && dy <= this.INTERACTION_RANGE;
   }
 
-  sowPlant(pos: Position, type: string): boolean {
-    const key = this.getPlantKey(pos);
-    const cell = this.getCellProperties(pos);
-    const plant = {
+  sowPlant(pos: Position, type: PlantType): boolean {
+    const cell = this.getCell(pos);
+    const newPlant: Plant = {
       type,
       growthLevel: 1,
     };
-    if (!this.plants.has(key) && canGrow(plant, cell.water, cell.sunlight)) {
-      this.plants.set(key, plant);
+    if (
+      (this.getPlant(pos).type === PlantType.NONE) &&
+      canGrow(newPlant, cell.water, cell.sunlight)
+    ) {
+      this.setPlant(pos, newPlant);
       cell.water -= PlantTypeInfo[type].waterToGrow;
       this.statisticTracker.increment("plantSown", type);
-      this.setCellProperties(pos, cell);
+      this.setCell(pos, cell);
       return true;
     }
     return false;
   }
 
   reapPlant(pos: Position): Plant | null {
-    const key = this.getPlantKey(pos);
-    const plant = this.plants.get(key);
-    if (plant && plant.growthLevel === PlantTypeInfo[plant.type].maxGrowth) {
-      this.plants.delete(key);
-      if (plant.type !== "withered") {
+    const plant = this.getPlant(pos);
+    if (
+      (this.getPlant(pos).type !== PlantType.NONE) &&
+      (plant.growthLevel === PlantTypeInfo[plant.type].maxGrowth)
+    ) {
+      this.setPlant(pos, { type: PlantType.NONE, growthLevel: 0 });
+      if (plant.type !== PlantType.WITHERED) {
         this.statisticTracker.increment("plantReaped", plant.type);
       }
       return plant;
     }
     return null;
-  }
-
-  getPlantKey(pos: Position): string {
-    return `${pos.x},${pos.y}`;
-  }
-
-  getPlant(pos: Position): Plant | undefined {
-    return this.plants.get(this.getPlantKey(pos));
   }
 
   isValidPosition(pos: Position): boolean {
@@ -173,7 +183,7 @@ export class Grid extends StatisticSubject {
         if (
           this.isValidPosition({ x, y }) &&
           !(x === pos.x && y === pos.y) &&
-          this.getPlant({ x, y })
+          (this.getPlant({ x, y }).type !== PlantType.NONE)
         ) {
           count++;
         }

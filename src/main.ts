@@ -1,6 +1,6 @@
 // ====== Main + Imports ======
 import { Game, GameConfig, StateManager } from "./state.ts";
-import { PlantAction, PlantTypeInfo } from "./plant.ts";
+import { getCssName, PlantAction, PlantType, PlantTypeInfo } from "./plant.ts";
 
 import "./style.css";
 import "./game.css";
@@ -22,8 +22,8 @@ const title = document.createElement("h1");
 title.textContent = GAME_NAME;
 
 // ====== Initialize Game State ======
-const stateManager: StateManager = new StateManager();
-let game: Game = stateManager.newGame(GAME_CONFIG);
+const stateManager: StateManager = new StateManager(GAME_CONFIG);
+let game: Game = stateManager.newGame();
 
 // ====== Game Scoring ======
 function calculateScore(): number {
@@ -51,7 +51,7 @@ function updateGridDisplay(): void {
       cell.className = "grid-cell";
       const pos = { x, y };
 
-      const cellProperties = game.grid.getCellProperties(pos);
+      const cellProperties = game.grid.getCell(pos);
 
       // water segments (top o cell)
       for (let i = 0; i < cellProperties.water; i++) {
@@ -70,10 +70,11 @@ function updateGridDisplay(): void {
       }
 
       const plant = game.grid.getPlant(pos);
-      if (plant) {
+      if (plant.type !== PlantType.NONE) {
         const plantElement = document.createElement("div");
-        plantElement.className =
-          `plant type-${plant.type} level-${plant.growthLevel}`;
+        plantElement.className = `plant type-${
+          getCssName(plant.type)
+        } level-${plant.growthLevel}`;
         cell.appendChild(plantElement);
       }
 
@@ -111,7 +112,7 @@ gameHud.id = "game-hud";
 
 const plantTypeDisplay = document.createElement("div");
 plantTypeDisplay.className = "current-plant-type";
-const initialTypeName = "Green Circle"; // default plant type
+const initialTypeName = PlantTypeInfo[game.player.getCurrentPlantType()].name;
 plantTypeDisplay.textContent = `Current Plant: ${initialTypeName}`;
 gameHud.appendChild(plantTypeDisplay);
 
@@ -160,7 +161,7 @@ advanceDayButton.onclick = () => {
 
     game = stateManager.newGame(GAME_CONFIG);
     updateAllDisplays();
-    stateManager.clearSaves();
+    stateManager.clearHistory();
 
     return;
   }
@@ -233,26 +234,27 @@ loadButton.onclick = () => {
 
 // ====== Undo and Redo Buttons ======
 const undoButton = document.createElement("button");
-undoButton.textContent = "Previous Day Checkpoint";
+undoButton.textContent = "Undo Checkpoint";
 undoButton.onclick = () => {
   const undoState = stateManager.getUndo();
   if (undoState !== null) {
     game = undoState;
     updateAllDisplays();
   } else {
-    alert("No more checkpoints to undo.");
+    game = stateManager.getInitialState()!;
+    alert("Reset to initial state. No more days to undo.");
   }
 };
 
 const redoButton = document.createElement("button");
-redoButton.textContent = "Next Day Checkpoint";
+redoButton.textContent = "Redo Checkpoint";
 redoButton.onclick = () => {
   const redoState = stateManager.getRedo();
   if (redoState !== null) {
     game = redoState;
     updateAllDisplays();
   } else {
-    alert("No more checkpoints to redo.");
+    alert("No more days to redo.");
   }
 };
 
@@ -284,9 +286,9 @@ const instructions = document.createElement("div");
   // TODO: Describe mechanics and limitations (e.g. player reach, plant growth, water/sunlight, etc.)
   description.innerText =
     `Click the cells current or adjacent to the farmer to sow or reap plants. \
-    Click the Finish Day button to end your turn and advance the day. \
-    You can use the Previous and Next Day Checkpoint buttons if you want to undo or redo a day. \
-    The game autosaves every time you finish a day, but you can also manually create saves. \
+    Click the Finish Day button to end your turn, advance the day, and autosave a checkpoint. \
+    You can use the Undo and Redo Checkpoint buttons if you want to replay a day/checkpoint. \
+    You can also manually create and load saves mid-day, creating more checkpoints for extra granularity. \
     \n
     Plants require water and sunlight to grow. \
     Different plants have different requirements (see below). \
@@ -335,17 +337,17 @@ document.addEventListener("keydown", (e) => {
       break;
     case "1":
     case "num1":
-      game.player.setPlantType("green-circle");
+      game.player.setPlantType(PlantType.GREEN_CIRCLE);
       updatePlantSelect();
       break;
     case "2":
     case "num2":
-      game.player.setPlantType("yellow-triangle");
+      game.player.setPlantType(PlantType.YELLOW_TRIANGLE);
       updatePlantSelect();
       break;
     case "3":
     case "num3":
-      game.player.setPlantType("purple-square");
+      game.player.setPlantType(PlantType.PURPLE_SQUARE);
       updatePlantSelect();
       break;
   }
