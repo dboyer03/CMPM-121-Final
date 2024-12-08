@@ -121,6 +121,7 @@ export class Grid extends StatisticSubject {
             this.setPlant(pos, { type: PlantType.WITHERED, growthLevel: 1 });
           } else {
             // plant didn't die
+            this.setPlant(pos, plant);
             livingPlants++;
           }
         }
