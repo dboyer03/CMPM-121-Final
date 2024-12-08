@@ -83,11 +83,13 @@ function updateGridDisplay(): void {
         e.preventDefault(); // prevent default right-click menu
         game.player.interactWithPlant(PlantAction.REAP, pos);
         updateGridDisplay();
+        updateScoreDisplay();
       });
 
       cell.addEventListener("click", (_e) => {
         game.player.interactWithPlant(PlantAction.SOW, pos);
         updateGridDisplay();
+        updateScoreDisplay();
       });
 
       // Add player if position matches
@@ -162,6 +164,7 @@ advanceDayButton.onclick = () => {
     game = stateManager.newGame(GAME_CONFIG);
     updateAllDisplays();
     stateManager.clearHistory();
+    stateManager.deleteAutoSave();
 
     return;
   }

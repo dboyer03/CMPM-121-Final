@@ -143,6 +143,10 @@ export class StateManager {
     this.current = -1;
   }
 
+  deleteAutoSave(): void {
+    localStorage.removeItem(`save_${StateManager.AUTO_SLOT}`);
+  }
+
   trySaveGame(game: Game, slot: string): boolean {
     this.pushToHistory(game);
     const saveData: SaveData = {
