@@ -231,13 +231,7 @@ function updateText(): void {
   redoButton.textContent = t("redo_checkpoint");
 
   // Update instructions text
-  const description = document.querySelector("#instructions-description") as HTMLParagraphElement;
-  if (description) {
-    description.innerText = t("description", { end_day: END_DAY });
-  }
-
-
-
+ updateInstructions();
 }
 
 function updateAllDisplays(): void {
@@ -246,6 +240,7 @@ function updateAllDisplays(): void {
   updateScoreDisplay();
   updateWeatherDisplay();
   updateText();
+  updateInstructions();
 }
 
 advanceDayButton.onclick = () => {
@@ -378,43 +373,50 @@ gameHud.appendChild(dayControls);
 
 // ====== Instructions ======
 const instructions = document.createElement("div");
-{
-  const description = document.createElement("p");
+instructions.id = "instructions";
 
-  const controls: { [key: string]: string } = {
-    "Left Click": "Sow a nearby plant",
-    "Right Click": "Reap a nearby plant",
-    "WASD / Arrow Keys": "Move player",
-    "1 / 2 / 3": "Switch plant type",
-  };
+// Create description and controls dynamically
+const description = document.createElement("p");
+description.id = "instructions-description"; // Add an ID for updating dynamically
+instructions.appendChild(description);
 
-  instructions.innerHTML = "<h2>Instructions</h2><hr>";
-  for (const [input, action] of Object.entries(controls)) {
-    instructions.innerHTML += `<p><strong>${input}</strong>: ${action}</p>`;
-  }
+function updateInstructions(): void {
+  const instructions = document.querySelector("#instructions") as HTMLDivElement;
+  const description = document.querySelector("#instructions-description") as HTMLParagraphElement;
 
-  // TODO: Describe mechanics and limitations (e.g. player reach, plant growth, water/sunlight, etc.)
-  description.innerText =
-    `Click the cells current or adjacent to the farmer to sow or reap plants. \
-    Click the Finish Day button to end your turn, advance the day, and autosave a checkpoint. \
-    You can use the Undo and Redo Checkpoint buttons if you want to replay a day/checkpoint. \
-    You can also manually create and load saves mid-day, creating more checkpoints for extra granularity. \
-    \n
-    Plants require water and sunlight to grow. \
-    Different plants have different requirements (see below). \
-    Don't overcrowd plants or they will die (Black squares, reap to clear). \
-    See how high of a score you can get in ${END_DAY} days!`;
-  instructions.appendChild(description);
-  for (const type in PlantType) {
-    if (!isNaN(Number(type))) {
-      const typeNum: number = Number(type);
-      const description = getPlantDescription(typeNum);
-      if (description) {
-        instructions.innerHTML += description;
+  if (instructions && description) {
+    // Clear previous instructions
+    instructions.innerHTML = `<h2>${t("controls")}</h2><hr>`;
+
+    // Dynamically generate controls using translations
+    const controls: { [key: string]: string } = {
+      "Left Click": t("controls_left_click"),
+      "Right Click": t("controls_right_click"),
+      "WASD / Arrow Keys": t("controls_movement"),
+      "1 / 2 / 3": t("controls_switch"),
+    };
+
+    // Add controls dynamically with line breaks
+    instructions.innerHTML += Object.entries(controls)
+      .map(([input, action]) => `<p><strong>${input}</strong>: ${action}</p>`)
+      .join("\n");
+
+    // Update the description
+    description.innerText = t("description", { end_day: END_DAY });
+
+    // Update plant-specific instructions
+    for (const type in PlantType) {
+      if (!isNaN(Number(type))) {
+        const typeNum: number = Number(type);
+        const description = getPlantDescription(typeNum);
+        if (description) {
+          instructions.innerHTML += description;
+        }
       }
     }
   }
 }
+
 
 const languageSelector = document.createElement("select");
 ["en", "zh", "ar"].forEach((lang) => {
@@ -485,5 +487,6 @@ app.appendChild(gameGrid);
 app.appendChild(gameHud);
 app.appendChild(instructions);
 updateAllDisplays();
+updateText();
 
 checkForAutoSave(); // Check for auto-save on launch
