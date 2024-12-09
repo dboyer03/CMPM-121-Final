@@ -42,7 +42,7 @@ const app = document.querySelector<HTMLDivElement>("#app")!;
 // ====== Title ======
 document.title = GAME_NAME;
 const title = document.createElement("h1");
-title.textContent = GAME_NAME;
+title.textContent = t("game_name");;
 
 // ====== Initialize Game State ======
 const stateManager: StateManager = new StateManager(GAME_CONFIG);
@@ -181,7 +181,7 @@ const scoreDisplay = document.createElement("p");
 scoreDisplay.className = "score";
 
 function updateScoreDisplay(): void {
-  scoreDisplay.textContent = `Score: ${calculateScore()}`;
+  scoreDisplay.textContent = t("score", { score: calculateScore() });
 }
 gameHud.appendChild(scoreDisplay);
 
@@ -198,14 +198,46 @@ const dayControls = document.createElement("div");
 dayControls.className = "controls";
 
 const dayCounter = document.createElement("div");
-dayCounter.textContent = `Day: ${game.dayManager.getCurrentDay()}`;
+dayCounter.textContent = t("day", { day: game.dayManager.getCurrentDay() });
 dayCounter.style.marginBottom = "10px";
 
 const advanceDayButton = document.createElement("button");
 advanceDayButton.textContent = "Finish Day";
 
 function updateDayDisplay(): void {
-  dayCounter.textContent = `Day: ${game.dayManager.getCurrentDay()}`;
+  dayCounter.textContent = t("day", { day: game.dayManager.getCurrentDay() });
+}
+
+function updateText(): void {
+  // Update the game title
+  title.textContent = t("game_name");
+
+  // Update the plant type display
+  const plantTypeDisplay = document.querySelector(".current-plant-type");
+  if (plantTypeDisplay) {
+    const typeName = getPlantTypeName(game.player.getCurrentPlantType());
+    plantTypeDisplay.textContent = `${t("current_plant")}: ${typeName}`;
+  }
+
+  // Update the day button text
+  advanceDayButton.textContent = t("finish_day");
+
+  // Update save/load button text
+  saveButton.textContent = t("save_game_prompt");
+  loadButton.textContent = t("load_game_prompt");
+
+  // Update undo/redo button text
+  undoButton.textContent = t("undo_checkpoint");
+  redoButton.textContent = t("redo_checkpoint");
+
+  // Update instructions text
+  const description = document.querySelector("#instructions-description") as HTMLParagraphElement;
+  if (description) {
+    description.innerText = t("description", { end_day: END_DAY });
+  }
+
+
+
 }
 
 function updateAllDisplays(): void {
@@ -213,6 +245,7 @@ function updateAllDisplays(): void {
   updateDayDisplay();
   updateScoreDisplay();
   updateWeatherDisplay();
+  updateText();
 }
 
 advanceDayButton.onclick = () => {
@@ -382,6 +415,28 @@ const instructions = document.createElement("div");
     }
   }
 }
+
+const languageSelector = document.createElement("select");
+["en", "zh", "ar"].forEach((lang) => {
+  const option = document.createElement("option");
+  option.value = lang;
+  option.textContent = lang.toUpperCase();
+  languageSelector.appendChild(option);
+});
+
+languageSelector.onchange = (e) => {
+  const selectedLanguage = (e.target as HTMLSelectElement).value as Language;
+  setLanguage(selectedLanguage);
+
+  // Update text direction for RTL languages
+  document.documentElement.dir = selectedLanguage === "ar" ? "rtl" : "ltr";
+
+  // Refresh all dynamic text
+  updateAllDisplays();
+};
+
+document.body.insertBefore(languageSelector, app);
+
 
 // ====== Keyboard Listeners ======
 document.addEventListener("keydown", (e) => {
