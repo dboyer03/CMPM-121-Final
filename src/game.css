@@ -58,6 +58,7 @@
 }
 
 .player {
+  position: absolute;
   background: rgb(255, 255, 255);
   border-radius: 50%;
   width: 24px;
@@ -103,6 +104,7 @@ button:hover {
 }
 
 .plant {
+  z-index: 1;
   width: 20px;
   height: 20px;
   position: absolute;
@@ -133,20 +135,54 @@ button:hover {
   border-radius: 20%;
 }
 
+.plant.type-weed {
+  --star-color: #a3a923;
+  --sqrt-3: 1.73205080757;
+  margin: 0 auto;
+  width: 0;
+  height: 0;
+  position: relative;
+  border-left: 1em solid transparent;
+  border-right: 1em solid transparent;
+  border-bottom: calc(1em * var(--sqrt-3)) solid var(--star-color);
+}
+
+.plant.type-weed:after {
+  content: "";
+  position: absolute;
+  width: 0;
+  height: 0;
+  left: -1em;
+  top: calc(1em * var(--sqrt-3) / 3);
+  border-left: 1em solid transparent;
+  border-right: 1em solid transparent;
+  border-top: calc(1em * var(--sqrt-3)) solid var(--star-color);
+}
+
 /* growth levels */
 .plant.level-1 {
-  transform: scale(0.3);
+  transform: scale(0.2);
   filter: brightness(1);
 }
 
 .plant.level-2 {
-  transform: scale(0.5);
+  transform: scale(0.4);
   filter: brightness(0.8);
 }
 
 .plant.level-3 {
-  transform: scale(1);
+  transform: scale(0.6);
   filter: brightness(0.6);
+}
+
+.plant.level-4 {
+  transform: scale(0.8);
+  filter: brightness(0.4);
+}
+
+.plant.level-5 {
+  transform: scale(1);
+  filter: brightness(0.2);
 }
 
 .cell-stats {

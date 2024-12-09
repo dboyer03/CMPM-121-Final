@@ -14,6 +14,7 @@ export enum PlantType { // indices map to PlantTypeInfo
   Cactus,
   Flower,
   Withered = 3,
+  Weed,
 } // ALWAYS add new types at the end to avoid changing indices
 
 export interface PlantTypeDefinition {
@@ -24,6 +25,19 @@ export interface PlantTypeDefinition {
   canReap(grid: Grid, pos: Position): boolean;
   process(grid: Grid, pos: Position): void;
   getDescription(): string;
+}
+
+const CENTER_INDEX = 4;
+function getPlantArea(grid: Grid, pos: Position): Plant[] {
+  const plantArea: Plant[] = [];
+  for (let y = pos.y - 1; y <= pos.y + 1; y++) {
+    for (let x = pos.x - 1; x <= pos.x + 1; x++) {
+      if (grid.isValidPosition({ x, y })) {
+        plantArea.push(grid.getPlant({ x, y }));
+      }
+    }
+  }
+  return plantArea;
 }
 
 // TODO: diversify CanGrow behaviors
@@ -39,8 +53,7 @@ const commonCanGrow = function (
     cell.sunlight >= this.sunToGrow;
 };
 
-// TODO: diversify CanReap behaviors and make maxGrowth optional
-const MAX_GROWTH = 3;
+// TODO: diversify CanReap behaviors
 const commonCanReap = function (
   this: PlantTypeDefinition,
   grid: Grid,
@@ -55,18 +68,11 @@ const commonProcess = function (
   grid: Grid,
   pos: Position,
 ): void {
-  const CENTER_INDEX = 4;
-  const plantArea: Plant[] = [];
-  for (let y = pos.y - 1; y <= pos.y + 1; y++) {
-    for (let x = pos.x - 1; x <= pos.x + 1; x++) {
-      if (grid.isValidPosition({ x, y })) {
-        plantArea.push(grid.getPlant({ x, y }));
-      }
-    }
-  }
+  const plantArea: Plant[] = getPlantArea(grid, pos);
+  const currPlant: Plant = grid.getPlant(pos);
 
   let crowdCount = 0;
-  if (this.type !== PlantType.NONE) {
+  if (currPlant.type !== PlantType.NONE) {
     plantArea.forEach((plant, i) => {
       if ((plant.type !== PlantType.NONE) && (i !== CENTER_INDEX)) {
         crowdCount++;
@@ -86,13 +92,13 @@ const commonProcess = function (
     // grow plant
     grid.setPlant(pos, {
       type: PlantType[this.name],
-      growthLevel: grid.getPlant(pos).growthLevel + 1,
+      growthLevel: currPlant.growthLevel + 1,
     });
   }
 };
 
 // TODO: diversify instructions
-const commonDefinition = function (this: PlantTypeDefinition): string {
+const commonDescription = function (this: PlantTypeDefinition): string {
   return `<p><strong>${this.name}</strong>:<br>` +
     `To Grow:<br> ${this.waterToGrow} water,<br>` +
     `${this.sunToGrow} sunlight,<br>` +
@@ -106,7 +112,7 @@ const plantDefinitions: PlantTypeDefinition[] = [
     waterToGrow: 2,
     sunToGrow: 2,
     maxCrowding: 8,
-    maxGrowth: MAX_GROWTH,
+    maxGrowth: 4,
     canGrow: function (grid: Grid, pos: Position): boolean {
       return commonCanGrow.call(this, grid, pos);
     },
@@ -117,7 +123,7 @@ const plantDefinitions: PlantTypeDefinition[] = [
       commonProcess.call(this, grid, pos);
     },
     getDescription: function (): string {
-      return commonDefinition.call(this);
+      return commonDescription.call(this);
     },
   },
   {
@@ -125,7 +131,7 @@ const plantDefinitions: PlantTypeDefinition[] = [
     waterToGrow: 1,
     sunToGrow: 3,
     maxCrowding: 2,
-    maxGrowth: MAX_GROWTH,
+    maxGrowth: 3,
     canGrow: function (grid: Grid, pos: Position): boolean {
       return commonCanGrow.call(this, grid, pos);
     },
@@ -136,7 +142,7 @@ const plantDefinitions: PlantTypeDefinition[] = [
       commonProcess.call(this, grid, pos);
     },
     getDescription: function (): string {
-      return commonDefinition.call(this);
+      return commonDescription.call(this);
     },
   },
   {
@@ -144,7 +150,7 @@ const plantDefinitions: PlantTypeDefinition[] = [
     waterToGrow: 3,
     sunToGrow: 1,
     maxCrowding: 4,
-    maxGrowth: MAX_GROWTH,
+    maxGrowth: 2,
     canGrow: function (grid: Grid, pos: Position): boolean {
       return commonCanGrow.call(this, grid, pos);
     },
@@ -155,7 +161,7 @@ const plantDefinitions: PlantTypeDefinition[] = [
       commonProcess.call(this, grid, pos);
     },
     getDescription: function (): string {
-      return commonDefinition.call(this);
+      return commonDescription.call(this);
     },
   },
   {
@@ -169,6 +175,52 @@ const plantDefinitions: PlantTypeDefinition[] = [
     process: function (): void {},
     getDescription: function (): string {
       return "";
+    },
+  },
+  {
+    name: "Weed",
+    maxGrowth: 2,
+    spreadChance: 0.05,
+    canGrow: function (grid: Grid, pos: Position): boolean {
+      return grid.getPlant(pos).growthLevel < this.maxGrowth;
+    },
+    canReap: function (): boolean {
+      return true;
+    },
+    process: function (grid: Grid, pos: Position): void {
+      const thisPlant: Plant = grid.getPlant(pos);
+      if (thisPlant.growthLevel < this.maxGrowth) {
+        grid.setPlant(pos, {
+          type: PlantType.Weed,
+          growthLevel: thisPlant.growthLevel + 1,
+        });
+        return; // only grow
+      }
+
+      // once max growth, try to spread
+      const plantArea: Plant[] = getPlantArea(grid, pos);
+      for (let i = 0; i < plantArea.length; i++) {
+        if (
+          plantArea[i].type === PlantType.NONE &&
+          Math.random() < this.spreadChance
+        ) {
+          const spreadTo: Position = {
+            x: pos.x + i % 3 - 1,
+            y: pos.y + Math.floor(i / 3) - 1,
+          };
+          grid.setPlant(spreadTo, {
+            type: PlantType.Weed,
+            growthLevel: 1,
+          });
+        }
+      }
+    },
+    getDescription: function (): string {
+      return `<p><strong>${this.name}</strong>:<br>` +
+        `To Grow:<br> In any conditions` +
+        `Growth maxes out at ${this.maxGrowth}<br>` +
+        `Can remove at any level` +
+        `Will crowd out other plants and spread</p>`;
     },
   },
 ]; // ALWAYS add new types at the end to avoid changing indices
@@ -213,7 +265,10 @@ export function plantProcessor(
       plantDefinitions[thisType].process(grid, { x, y });
 
       const newType: PlantType = grid.getPlant({ x, y }).type;
-      if (newType !== PlantType.NONE && newType !== PlantType.Withered) {
+
+      if (newType !== thisType && newType === PlantType.Withered) {
+        statTracker.increment("plantDied");
+      } else if (newType !== PlantType.NONE) {
         livingPlants++;
       }
     }
@@ -225,12 +280,12 @@ export function plantProcessor(
 export function trySow(grid: Grid, pos: Position, sowType: PlantType): boolean {
   const currPlantType = grid.getPlant(pos).type;
   const sowPlantDef = plantDefinitions[sowType];
-  if (currPlantType === PlantType.NONE && sowType !== null) {
+  if (currPlantType === PlantType.NONE && sowType !== PlantType.NONE) {
     // process should handle sowing like growing
     sowPlantDef.process(grid, pos);
-    return true;
   }
-  return false;
+  return (currPlantType === PlantType.NONE &&
+    grid.getPlant(pos).type !== PlantType.NONE);
 }
 
 export function tryReap(grid: Grid, pos: Position): boolean {

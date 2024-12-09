@@ -68,8 +68,13 @@ export class Player extends StatisticSubject {
         this.statisticTracker.increment("plantSown", this.currentPlantType);
       }
     } else {
+      const originalType: PlantType = this.grid.getPlant(targetPos).type;
       result = tryReap(this.grid, targetPos);
-      if (result) {
+      if (
+        result &&
+        originalType !== PlantType.Withered &&
+        originalType !== PlantType.Weed
+      ) {
         this.statisticTracker.increment("plantReaped", this.currentPlantType);
       }
     }
