@@ -8,7 +8,7 @@ import "./style.css";
 import "./game.css";
 
 // ====== Consts ======
-const GAME_NAME = "CMPM 121 Final Project - Group 334";
+const GAME_NAME = "CMPM 121 Final Project - Group 33";
 const GRID_SIZE = 10;
 const END_DAY = 31;
 const GAME_CONFIG: GameConfig = {
