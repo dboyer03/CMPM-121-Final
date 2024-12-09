@@ -22,29 +22,29 @@ const data = parse(fileContent);
 const GRID_SIZE = data.starting_conditions.grid_size;
 const END_DAY = data.victory_conditions.end_day;
 const SCORE_GOAL = data.victory_conditions.end_score;
+let CURRENT_WEATHER = "sunny";
 
 const GAME_CONFIG: GameConfig = {
   gridWidth: GRID_SIZE,
   gridHeight: GRID_SIZE,
 };
 
-const WEATHER_OPTIONS = [
-  { weather: "sunny", weight: data.starting_conditions.sunny_chances },
-  { weather: "rainy", weight: data.starting_conditions.rainy_chances },
-  { weather: "hot", weight: data.starting_conditions.hot_chances },
-];
-
-const totalWeight = WEATHER_OPTIONS.reduce(
-  (sum, WEATHER_OPTIONS) => sum + WEATHER_OPTIONS.weight,
-  0,
-);
-const random = Math.random() * totalWeight;
-
 function weatherSelect(): string {
+  const WEATHER_OPTIONS = [
+    { weather: "sunny", weight: data.starting_conditions.sunny_chances },
+    { weather: "rainy", weight: data.starting_conditions.rainy_chances },
+    { weather: "hot", weight: data.starting_conditions.hot_chances },
+  ];
+  
+  const totalWeight = WEATHER_OPTIONS.reduce(
+    (sum, WEATHER_OPTIONS) => sum + WEATHER_OPTIONS.weight, 0);
+  const random = Math.random() * totalWeight;
+
   let cumulativeWeight = 0;
   for (const option of WEATHER_OPTIONS) {
     cumulativeWeight += option.weight;
     if (random <= cumulativeWeight) {
+      console.log(option.weather);
       return option.weather;
     }
   }
@@ -172,6 +172,13 @@ function updateScoreDisplay(): void {
 }
 gameHud.appendChild(scoreDisplay);
 
+const weatherDisplay = document.createElement("p");
+weatherDisplay.className = "weather";
+function updateWeatherDisplay(): void{
+  weatherDisplay.textContent = `Current Weather: ${CURRENT_WEATHER}`
+}
+gameHud.appendChild(weatherDisplay);
+
 // ====== HUD: Day Button ======
 const dayControls = document.createElement("div");
 dayControls.className = "controls";
@@ -191,6 +198,7 @@ function updateAllDisplays(): void {
   updateGridDisplay();
   updateDayDisplay();
   updateScoreDisplay();
+  updateWeatherDisplay();
 }
 
 advanceDayButton.onclick = () => {
@@ -218,7 +226,8 @@ advanceDayButton.onclick = () => {
   }
 
   // Next day
-  game.dayManager.advanceDay(weatherSelect());
+  CURRENT_WEATHER = weatherSelect();
+  game.dayManager.advanceDay(CURRENT_WEATHER);
   stateManager.autoSave(game);
   updateAllDisplays();
 };
