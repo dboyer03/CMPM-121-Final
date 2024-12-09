@@ -17,6 +17,7 @@ export interface Game {
   grid: Grid;
   dayManager: DayManager;
   player: Player;
+  weather: string,
 }
 
 interface Checkpoint {
@@ -24,6 +25,7 @@ interface Checkpoint {
   gridState: string; // base64-encoded Uint8Array of 4-byte structs represent cell and plant states
   playerPosition: Position;
   dayCount: number;
+  weather: string;
 }
 
 interface SaveData {
@@ -58,6 +60,7 @@ export class StateManager {
       ),
       playerPosition: game.player.getPosition(),
       dayCount: game.dayManager.getCurrentDay(),
+      weather: game.dayManager.getCurrentWeather(),
     };
 
     return checkpoint;
@@ -75,7 +78,8 @@ export class StateManager {
     game.grid.setState(
       Uint8Array.from(atob(checkpoint.gridState), (c) => c.charCodeAt(0)),
     );
-    game.dayManager = new DayManager(game.grid, checkpoint.dayCount, true);
+    game.dayManager = new DayManager(game.grid, checkpoint.dayCount, checkpoint.weather, true);
+    console.log(checkpoint.weather);
     game.player = new Player(
       game.grid,
       checkpoint.playerPosition,

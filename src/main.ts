@@ -22,12 +22,23 @@ const data = parse(fileContent);
 const GRID_SIZE = data.starting_conditions.grid_size;
 const END_DAY = data.victory_conditions.end_day;
 const SCORE_GOAL = data.victory_conditions.end_score;
-let CURRENT_WEATHER = "sunny";
 
 const GAME_CONFIG: GameConfig = {
   gridWidth: GRID_SIZE,
   gridHeight: GRID_SIZE,
 };
+
+const app = document.querySelector<HTMLDivElement>("#app")!;
+
+// ====== Title ======
+document.title = GAME_NAME;
+const title = document.createElement("h1");
+title.textContent = GAME_NAME;
+
+// ====== Initialize Game State ======
+const stateManager: StateManager = new StateManager(GAME_CONFIG);
+let game: Game = stateManager.newGame();
+let CURRENT_WEATHER = game.dayManager.getCurrentWeather();
 
 function weatherSelect(): string {
   const WEATHER_OPTIONS = [
@@ -51,17 +62,6 @@ function weatherSelect(): string {
 
   throw new Error("Invalid weight configuration");
 }
-
-const app = document.querySelector<HTMLDivElement>("#app")!;
-
-// ====== Title ======
-document.title = GAME_NAME;
-const title = document.createElement("h1");
-title.textContent = GAME_NAME;
-
-// ====== Initialize Game State ======
-const stateManager: StateManager = new StateManager(GAME_CONFIG);
-let game: Game = stateManager.newGame();
 
 // ====== Game Scoring ======
 function calculateScore(): number {
