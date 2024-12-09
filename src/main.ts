@@ -298,6 +298,7 @@ gameHud.appendChild(dayControls);
 
 // ====== Instructions ======
 const instructions = document.createElement("div");
+instructions.id = "instructions";
 
 // Create description and controls dynamically
 const description = document.createElement("p");
@@ -339,17 +340,15 @@ for (const info in PlantTypeInfo) {
   i++;
 }
 
-
-
 function updateInstructions(): void {
+  // Locate the instructions container
   const instructions = document.querySelector("#instructions") as HTMLDivElement;
-  const description = document.querySelector("#instructions-description") as HTMLParagraphElement;
 
-  if (instructions && description) {
-    // Clear previous instructions
+  if (instructions) {
+    // Clear existing content
     instructions.innerHTML = `<h2>${t("controls")}</h2><hr>`;
 
-    // Dynamically generate controls using translations
+    // Add translated controls dynamically
     const controls: { [key: string]: string } = {
       "Left Click": t("controls_left_click"),
       "Right Click": t("controls_right_click"),
@@ -357,33 +356,32 @@ function updateInstructions(): void {
       "1 / 2 / 3": t("controls_switch"),
     };
 
-    // Add controls dynamically with line breaks
     instructions.innerHTML += Object.entries(controls)
       .map(([input, action]) => `<p><strong>${input}</strong>: ${action}</p>`)
       .join("\n");
 
-    // Update the description
-    description.innerText = t("description", { end_day: END_DAY });
+    // Add description text dynamically
+    instructions.innerHTML += `<p id="instructions-description">${t("description", { end_day: END_DAY })}</p>`;
 
-    // Update plant-specific instructions
+    // Add plant-specific instructions
     let i = 1;
-    for (const info in PlantTypeInfo) {
-      if (info === "withered") continue;
-      instructions.innerHTML += `<p><strong>(${i}) ${
-        PlantTypeInfo[info].name
-      }</strong>:<br>
-      ${t("plant_instructions.plant_details", {
-        index: i,
-        name: PlantTypeInfo[info].name,
-        water: PlantTypeInfo[info].waterToGrow,
-        sunlight: PlantTypeInfo[info].sunToGrow,
-        crowding: PlantTypeInfo[info].maxCrowding,
-        maxGrowth: PlantTypeInfo[info].maxGrowth,
-      })}</p>`;
+    for (const key in PlantTypeInfo) {
+      if (key === "withered") continue;
+      const plantInfo = PlantTypeInfo[key];
+      instructions.innerHTML += `<p><strong>(${i}) ${plantInfo.name}</strong>:<br>
+        ${t("plant_instructions.plant_details", {
+          index: i,
+          name: plantInfo.name,
+          water: plantInfo.waterToGrow,
+          sunlight: plantInfo.sunToGrow,
+          crowding: plantInfo.maxCrowding,
+          maxGrowth: plantInfo.maxGrowth,
+        })}</p>`;
       i++;
     }
   }
 }
+
 
 
 const languageSelector = document.createElement("select");
