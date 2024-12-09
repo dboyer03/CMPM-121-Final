@@ -280,7 +280,7 @@ export function plantProcessor(
 export function trySow(grid: Grid, pos: Position, sowType: PlantType): boolean {
   const currPlantType = grid.getPlant(pos).type;
   const sowPlantDef = plantDefinitions[sowType];
-  if (currPlantType === PlantType.NONE && sowType !== PlantType.NONE) {
+  if (sowType !== PlantType.NONE) {
     // process should handle sowing like growing
     sowPlantDef.process(grid, pos);
   }
@@ -291,7 +291,7 @@ export function trySow(grid: Grid, pos: Position, sowType: PlantType): boolean {
 export function tryReap(grid: Grid, pos: Position): boolean {
   const currPlantType = grid.getPlant(pos).type;
   const currPlantDef = plantDefinitions[currPlantType];
-  if (currPlantDef.canReap(grid, pos)) {
+  if (currPlantType !== PlantType.NONE && currPlantDef.canReap(grid, pos)) {
     grid.setPlant(pos, EMPTY);
     return true;
   }

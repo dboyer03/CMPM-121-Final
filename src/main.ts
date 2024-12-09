@@ -9,7 +9,6 @@ import {
 } from "./plant.ts";
 import { parse } from "toml";
 
-
 import "./style.css";
 import "./game.css";
 
@@ -54,16 +53,17 @@ function weatherSelect(): string {
     { weather: "rainy", weight: data.starting_conditions.rainy_chances },
     { weather: "hot", weight: data.starting_conditions.hot_chances },
   ];
-  
+
   const totalWeight = WEATHER_OPTIONS.reduce(
-    (sum, WEATHER_OPTIONS) => sum + WEATHER_OPTIONS.weight, 0);
+    (sum, WEATHER_OPTIONS) => sum + WEATHER_OPTIONS.weight,
+    0,
+  );
   const random = Math.random() * totalWeight;
 
   let cumulativeWeight = 0;
   for (const option of WEATHER_OPTIONS) {
     cumulativeWeight += option.weight;
     if (random <= cumulativeWeight) {
-      console.log(option.weather);
       return option.weather;
     }
   }
@@ -75,8 +75,7 @@ function weatherSelect(): string {
 function calculateScore(): number {
   let score = 0;
 
-  score =
-    (game.statTracker.get("plantSown") ?? 0) * 0.5 + // 0.5 points per plant sown
+  score = (game.statTracker.get("plantSown") ?? 0) * 0.5 + // 0.5 points per plant sown
     (game.statTracker.get("plantReaped") ?? 0) * 1 + // 1 point per plant reaped
     (game.statTracker.get("plantDied") ?? 0) * -1 + // -1 points per plant died
     Math.floor((game.statTracker.get("maxGridAlive") ?? 0) / 10) * 10; // 10 points per every 10 plants alive at once
@@ -186,8 +185,9 @@ gameHud.appendChild(scoreDisplay);
 
 const weatherDisplay = document.createElement("p");
 weatherDisplay.className = "weather";
-function updateWeatherDisplay(): void{
-  weatherDisplay.textContent = `Current Weather: ${game.dayManager.getCurrentWeather()}`
+function updateWeatherDisplay(): void {
+  weatherDisplay.textContent =
+    `Current Weather: ${game.dayManager.getCurrentWeather()}`;
 }
 gameHud.appendChild(weatherDisplay);
 
@@ -262,9 +262,11 @@ function handleLoad(): void {
   }
 
   const slot = prompt(
-    `Enter save slot name:\nAvailable slots:\n${slots
-      .map((s) => s.replace("save_", ""))
-      .join("\n")}`,
+    `Enter save slot name:\nAvailable slots:\n${
+      slots
+        .map((s) => s.replace("save_", ""))
+        .join("\n")
+    }`,
   );
   if (slot) {
     const loadSave = stateManager.tryLoadSave(slot);
@@ -357,7 +359,8 @@ const instructions = document.createElement("div");
   }
 
   // TODO: Describe mechanics and limitations (e.g. player reach, plant growth, water/sunlight, etc.)
-  description.innerText = `Click the cells current or adjacent to the farmer to sow or reap plants. \
+  description.innerText =
+    `Click the cells current or adjacent to the farmer to sow or reap plants. \
     Click the Finish Day button to end your turn, advance the day, and autosave a checkpoint. \
     You can use the Undo and Redo Checkpoint buttons if you want to replay a day/checkpoint. \
     You can also manually create and load saves mid-day, creating more checkpoints for extra granularity. \

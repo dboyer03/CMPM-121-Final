@@ -1,7 +1,6 @@
 {
   "version": "4",
   "specifiers": {
-    "npm:fs@^0.0.1-security": "0.0.1-security",
     "npm:toml@3": "3.0.0",
     "npm:vite@*": "5.4.8"
   },
@@ -154,9 +153,6 @@
         "@esbuild/win32-x64"
       ]
     },
-    "fs@0.0.1-security": {
-      "integrity": "sha512-3XY9e1pP0CVEUCdj5BmfIZxRBTSDycnbqhIOGec9QYtmVH2fbLpj86CFWkrNOkt/Fvty4KZG5lTglL9j/gJ87w=="
-    },
     "fsevents@2.3.3": {
       "integrity": "sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw=="
     },
@@ -215,7 +211,6 @@
   },
   "workspace": {
     "dependencies": [
-      "npm:fs@^0.0.1-security",
       "npm:toml@3"
     ]
   }

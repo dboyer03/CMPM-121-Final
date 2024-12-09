@@ -17,7 +17,7 @@ export interface Game {
   grid: Grid;
   dayManager: DayManager;
   player: Player;
-  weather: string,
+  weather: string;
 }
 
 interface Checkpoint {

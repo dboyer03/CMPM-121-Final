@@ -85,19 +85,16 @@ export class Grid extends StatisticSubject {
   }
 
   updateEnvironment(weather: string): void {
-
-    let livingPlants = 0;
-
-    switch(weather){
-      case("sunny"):
+    switch (weather) {
+      case ("sunny"):
         this.MAX_RAIN = 2;
         this.MIN_WATER_RETENTION = 0.5;
         break;
-      case("hot"):
+      case ("hot"):
         this.MAX_RAIN = 1;
         this.MIN_WATER_RETENTION = 0.2;
         break;
-      case("rainy"):
+      case ("rainy"):
         this.MAX_RAIN = 3;
         this.MIN_WATER_RETENTION = 0.7;
         break;
@@ -121,9 +118,11 @@ export class Grid extends StatisticSubject {
         }
 
         // update sunlight
-        if(weather == "hot"){
-            cell.sunlight = Math.random() < 0.5 ? 2 : 3;
-        }else{cell.sunlight = Math.floor(Math.random() * (this.MAX_SUNLIGHT + 1));}
+        if (weather == "hot") {
+          cell.sunlight = Math.random() < 0.5 ? 2 : 3;
+        } else {cell.sunlight = Math.floor(
+            Math.random() * (this.MAX_SUNLIGHT + 1),
+          );}
 
         // update cell
         this.setCell(pos, cell);
@@ -131,32 +130,28 @@ export class Grid extends StatisticSubject {
     }
   }
 
-  updateDrought(){
-    let livingPlants = 0;
+  updateDrought() {
     for (let y = 0; y < this.height; y++) {
       for (let x = 0; x < this.width; x++) {
         const pos: Position = { x, y };
         const cell: Cell = this.getCell(pos);
         const plant: Plant = this.getPlant(pos);
 
-        // update plant
+        // update water (drought)
+        cell.water = 0;
+        this.setCell(pos, cell);
+
+        // try to kill plants
         if (
-          plant.type !== PlantType.NONE && plant.type !== PlantType.WITHERED
+          plant.type !== PlantType.NONE && plant.type !== PlantType.Withered
         ) {
-            const result = Math.random() < 0.75;
-            if(result == true){
-              this.statisticTracker.increment("plantDied", plant.type); // notify before modification
-              this.setPlant(pos, { type: PlantType.WITHERED, growthLevel: 1 });
-            } else {
-              // plant didn't die
-              this.setPlant(pos, plant);
-              livingPlants++;
+          const result = Math.random() < 0.75;
+          if (result == true) {
+            this.setPlant(pos, { type: PlantType.Withered, growthLevel: 0 });
           }
         }
-        this.setCell(pos, cell);
       }
     }
-    this.statisticTracker.setIfMax("maxGridAlive", livingPlants);
   }
 
   isWithinRange(playerPos: Position, targetPos: Position): boolean {
