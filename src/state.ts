@@ -74,7 +74,12 @@ export class StateManager {
     game.grid.setState(
       Uint8Array.from(atob(checkpoint.gridState), (c) => c.charCodeAt(0)),
     );
-    game.dayManager = new DayManager(game.grid, checkpoint.dayCount, true);
+    game.dayManager = new DayManager(
+      game.grid,
+      game.statTracker,
+      checkpoint.dayCount,
+      true,
+    );
     game.player = new Player(
       game.grid,
       checkpoint.playerPosition,
@@ -105,7 +110,7 @@ export class StateManager {
       this.config.gridHeight,
       game.statTracker,
     );
-    game.dayManager = new DayManager(game.grid);
+    game.dayManager = new DayManager(game.grid, game.statTracker);
     game.player = new Player(game.grid, { x: 0, y: 0 }, game.statTracker);
 
     const fullGame: Game = game as Game;

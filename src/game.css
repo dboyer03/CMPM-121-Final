@@ -109,12 +109,12 @@ button:hover {
   transition: all 0.3s ease;
 }
 
-.plant.type-green-circle {
+.plant.type-corn {
   background-color: #4caf50;
   border-radius: 50%;
 }
 
-.plant.type-yellow-triangle {
+.plant.type-cactus {
   width: 0;
   height: 0;
   background-color: transparent;
@@ -123,15 +123,13 @@ button:hover {
   border-bottom: 20px solid #ffc107;
 }
 
-.plant.type-purple-square {
+.plant.type-flower {
   background-color: #9c27b0;
   border-radius: 0;
 }
 
 .plant.type-withered {
   background-color: black;
-  width: 50px;
-  height: 50px;
   border-radius: 20%;
 }
 

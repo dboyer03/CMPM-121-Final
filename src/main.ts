@@ -1,6 +1,12 @@
 // ====== Main + Imports ======
 import { Game, GameConfig, StateManager } from "./state.ts";
-import { getCssName, PlantAction, PlantType, PlantTypeInfo } from "./plant.ts";
+import {
+  getPlantDescription,
+  getPlantTypeCssName,
+  getPlantTypeName,
+  PlantAction,
+  PlantType,
+} from "./plant.ts";
 
 import "./style.css";
 import "./game.css";
@@ -73,7 +79,7 @@ function updateGridDisplay(): void {
       if (plant.type !== PlantType.NONE) {
         const plantElement = document.createElement("div");
         plantElement.className = `plant type-${
-          getCssName(plant.type)
+          getPlantTypeCssName(plant.type)
         } level-${plant.growthLevel}`;
         cell.appendChild(plantElement);
       }
@@ -81,15 +87,17 @@ function updateGridDisplay(): void {
       // Add click handlers for plant interactions
       cell.addEventListener("contextmenu", (e) => {
         e.preventDefault(); // prevent default right-click menu
-        game.player.interactWithPlant(PlantAction.REAP, pos);
-        updateGridDisplay();
-        updateScoreDisplay();
+        if (game.player.interactWithPlant(PlantAction.REAP, pos)) {
+          updateGridDisplay();
+          updateScoreDisplay();
+        }
       });
 
       cell.addEventListener("click", (_e) => {
-        game.player.interactWithPlant(PlantAction.SOW, pos);
-        updateGridDisplay();
-        updateScoreDisplay();
+        if (game.player.interactWithPlant(PlantAction.SOW, pos)) {
+          updateGridDisplay();
+          updateScoreDisplay();
+        }
       });
 
       // Add player if position matches
@@ -114,14 +122,14 @@ gameHud.id = "game-hud";
 
 const plantTypeDisplay = document.createElement("div");
 plantTypeDisplay.className = "current-plant-type";
-const initialTypeName = PlantTypeInfo[game.player.getCurrentPlantType()].name;
+const initialTypeName = getPlantTypeName(game.player.getCurrentPlantType());
 plantTypeDisplay.textContent = `Current Plant: ${initialTypeName}`;
 gameHud.appendChild(plantTypeDisplay);
 
 function updatePlantSelect(): void {
   const plantTypeDisplay = document.querySelector(".current-plant-type");
   if (plantTypeDisplay) {
-    const typeName = PlantTypeInfo[game.player.getCurrentPlantType()].name;
+    const typeName = getPlantTypeName(game.player.getCurrentPlantType());
     plantTypeDisplay.textContent = `Current Plant: ${typeName}`;
   }
 }
@@ -298,19 +306,13 @@ const instructions = document.createElement("div");
     Don't overcrowd plants or they will die (Black squares, reap to clear). \
     See how high of a score you can get in ${END_DAY} days!`;
   instructions.appendChild(description);
-  {
-    let i = 1;
-    for (const info in PlantTypeInfo) {
-      if (info === "withered") continue;
-      instructions.innerHTML += `<p><strong>(${i}) ${
-        PlantTypeInfo[info].name
-      }</strong>:<br>
-      To Grow: ${PlantTypeInfo[info].waterToGrow} water,
-      ${PlantTypeInfo[info].sunToGrow} sunlight,
-      ${PlantTypeInfo[info].maxCrowding} maximum adjacent plants
-    <br>
-      Can sow at level ${PlantTypeInfo[info].maxGrowth}</p>`;
-      i++;
+  for (const type in PlantType) {
+    if (!isNaN(Number(type))) {
+      const typeNum: number = Number(type);
+      const description = getPlantDescription(typeNum);
+      if (description) {
+        instructions.innerHTML += description;
+      }
     }
   }
 }
@@ -340,17 +342,17 @@ document.addEventListener("keydown", (e) => {
       break;
     case "1":
     case "num1":
-      game.player.setPlantType(PlantType.GREEN_CIRCLE);
+      game.player.setCurrentPlantType(PlantType.Corn);
       updatePlantSelect();
       break;
     case "2":
     case "num2":
-      game.player.setPlantType(PlantType.YELLOW_TRIANGLE);
+      game.player.setCurrentPlantType(PlantType.Cactus);
       updatePlantSelect();
       break;
     case "3":
     case "num3":
-      game.player.setPlantType(PlantType.PURPLE_SQUARE);
+      game.player.setCurrentPlantType(PlantType.Flower);
       updatePlantSelect();
       break;
   }
