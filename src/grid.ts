@@ -16,10 +16,11 @@ export class Grid extends StatisticSubject {
   readonly height: number;
   private state: Uint8Array; // Byte array to store grid state
   private readonly INTERACTION_RANGE = 1; // adjacent cell range
-  private readonly MAX_WATER = 5; // max water
-  private readonly MAX_RAIN = 2; // max water increase per tick
-  private readonly MIN_WATER_RETENTION = 0.5; // % water retention
-  private readonly MAX_SUNLIGHT = 3; // max sunlight
+  //initial values (sunny day)
+  private MAX_WATER = 5; // max water
+  private MAX_RAIN = 2; // max water increase per tick
+  private MIN_WATER_RETENTION = 0.5; // % water retention
+  private MAX_SUNLIGHT = 3; // max sunlight
 
   constructor(width: number, height: number, statTracker: StatisticTracker) {
     super(statTracker);
@@ -77,8 +78,15 @@ export class Grid extends StatisticSubject {
     this.state = state;
   }
 
-  updateEnvironment(): void {
+  updateEnvironment(weather: string): void {
     let livingPlants = 0;
+    switch (weather) {
+      case "sunny":
+        MAX_WATER = 5; // max water
+        MAX_RAIN = 2; // max water increase per tick
+        MIN_WATER_RETENTION = 0.5; // % water retention
+        MAX_SUNLIGHT = 3; // max sunlight
+    }
 
     // update cell resources
     for (let y = 0; y < this.height; y++) {
@@ -92,8 +100,7 @@ export class Grid extends StatisticSubject {
           cell.water = Math.min(
             Math.round(
               cell.water * Math.min(Math.random(), this.MIN_WATER_RETENTION),
-            ) +
-              Math.ceil(Math.random() * this.MAX_RAIN),
+            ) + Math.ceil(Math.random() * this.MAX_RAIN),
             this.MAX_WATER,
           );
         }
@@ -103,7 +110,8 @@ export class Grid extends StatisticSubject {
 
         // update plant
         if (
-          plant.type !== PlantType.NONE && plant.type !== PlantType.WITHERED
+          plant.type !== PlantType.NONE &&
+          plant.type !== PlantType.WITHERED
         ) {
           // update plant growth
           if (canGrow(plant, cell.water, cell.sunlight)) {
@@ -114,7 +122,7 @@ export class Grid extends StatisticSubject {
           // check for crowding
           if (
             this.countAdjacentPlants(pos) >
-              PlantTypeInfo[plant.type].maxCrowding
+            PlantTypeInfo[plant.type].maxCrowding
           ) {
             // kill plant
             this.statisticTracker.increment("plantDied", plant.type); // notify before modification
@@ -145,7 +153,7 @@ export class Grid extends StatisticSubject {
       growthLevel: 1,
     };
     if (
-      (this.getPlant(pos).type === PlantType.NONE) &&
+      this.getPlant(pos).type === PlantType.NONE &&
       canGrow(newPlant, cell.water, cell.sunlight)
     ) {
       this.setPlant(pos, newPlant);
@@ -160,8 +168,8 @@ export class Grid extends StatisticSubject {
   reapPlant(pos: Position): Plant | null {
     const plant = this.getPlant(pos);
     if (
-      (this.getPlant(pos).type !== PlantType.NONE) &&
-      (plant.growthLevel === PlantTypeInfo[plant.type].maxGrowth)
+      this.getPlant(pos).type !== PlantType.NONE &&
+      plant.growthLevel === PlantTypeInfo[plant.type].maxGrowth
     ) {
       this.setPlant(pos, { type: PlantType.NONE, growthLevel: 0 });
       if (plant.type !== PlantType.WITHERED) {
@@ -173,8 +181,9 @@ export class Grid extends StatisticSubject {
   }
 
   isValidPosition(pos: Position): boolean {
-    return pos.x >= 0 && pos.x < this.width &&
-      pos.y >= 0 && pos.y < this.height;
+    return (
+      pos.x >= 0 && pos.x < this.width && pos.y >= 0 && pos.y < this.height
+    );
   }
 
   countAdjacentPlants(pos: Position): number {
@@ -184,7 +193,7 @@ export class Grid extends StatisticSubject {
         if (
           this.isValidPosition({ x, y }) &&
           !(x === pos.x && y === pos.y) &&
-          (this.getPlant({ x, y }).type !== PlantType.NONE)
+          this.getPlant({ x, y }).type !== PlantType.NONE
         ) {
           count++;
         }
