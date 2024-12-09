@@ -381,14 +381,14 @@ description.id = "instructions-description"; // Add an ID for updating dynamical
 instructions.appendChild(description);
 
 function updateInstructions(): void {
+  // Locate the instructions container
   const instructions = document.querySelector("#instructions") as HTMLDivElement;
-  const description = document.querySelector("#instructions-description") as HTMLParagraphElement;
 
-  if (instructions && description) {
-    // Clear previous instructions
+  if (instructions) {
+    // Clear existing content
     instructions.innerHTML = `<h2>${t("controls")}</h2><hr>`;
 
-    // Dynamically generate controls using translations
+    // Add translated controls dynamically
     const controls: { [key: string]: string } = {
       "Left Click": t("controls_left_click"),
       "Right Click": t("controls_right_click"),
@@ -396,13 +396,12 @@ function updateInstructions(): void {
       "1 / 2 / 3": t("controls_switch"),
     };
 
-    // Add controls dynamically with line breaks
     instructions.innerHTML += Object.entries(controls)
       .map(([input, action]) => `<p><strong>${input}</strong>: ${action}</p>`)
       .join("\n");
 
-    // Update the description
-    description.innerText = t("description", { end_day: END_DAY });
+    // Add description text dynamically
+    instructions.innerHTML += `<p id="instructions-description">${t("description", { end_day: END_DAY })}</p>`;
 
     // Update plant-specific instructions
     for (const type in PlantType) {
@@ -416,6 +415,7 @@ function updateInstructions(): void {
     }
   }
 }
+
 
 
 const languageSelector = document.createElement("select");
