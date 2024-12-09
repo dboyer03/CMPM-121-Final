@@ -9,6 +9,10 @@ import {
 } from "./plant.ts";
 import { parse } from "toml";
 
+// localization
+import { Language, setLanguage, t, tl } from "./translation.ts";
+import plantTranslations from "./plant-translation.json" with { type: "json" };
+
 import "./style.css";
 import "./game.css";
 
@@ -40,7 +44,7 @@ const app = document.querySelector<HTMLDivElement>("#app")!;
 // ====== Title ======
 document.title = GAME_NAME;
 const title = document.createElement("h1");
-title.textContent = GAME_NAME;
+title.textContent = t("game_name");
 
 // ====== Initialize Game State ======
 const stateManager: StateManager = new StateManager(GAME_CONFIG);
@@ -164,22 +168,23 @@ const plantTypeDisplay = document.createElement("div");
 plantTypeDisplay.className = "current-plant-type";
 const initialTypeName = getPlantTypeName(game.player.getCurrentPlantType());
 plantTypeDisplay.textContent = `Current Plant: ${initialTypeName}`;
-gameHud.appendChild(plantTypeDisplay);
 
 function updatePlantSelect(): void {
   const plantTypeDisplay = document.querySelector(".current-plant-type");
   if (plantTypeDisplay) {
-    const typeName = getPlantTypeName(game.player.getCurrentPlantType());
-    plantTypeDisplay.textContent = `Current Plant: ${typeName}`;
+    plantTypeDisplay.textContent = `${t("current_plant")}: ${
+      tl(plantTranslations.names, game.player.getCurrentPlantType())
+    }`;
   }
 }
+gameHud.appendChild(plantTypeDisplay);
 
 // ====== HUD: Score ======
 const scoreDisplay = document.createElement("p");
 scoreDisplay.className = "score";
 
 function updateScoreDisplay(): void {
-  scoreDisplay.textContent = `Score: ${calculateScore()}`;
+  scoreDisplay.textContent = t("score", { score: calculateScore() });
 }
 gameHud.appendChild(scoreDisplay);
 
@@ -196,14 +201,40 @@ const dayControls = document.createElement("div");
 dayControls.className = "controls";
 
 const dayCounter = document.createElement("div");
-dayCounter.textContent = `Day: ${game.dayManager.getCurrentDay()}`;
+dayCounter.textContent = t("day", { day: game.dayManager.getCurrentDay() });
 dayCounter.style.marginBottom = "10px";
 
 const advanceDayButton = document.createElement("button");
 advanceDayButton.textContent = "Finish Day";
 
 function updateDayDisplay(): void {
-  dayCounter.textContent = `Day: ${game.dayManager.getCurrentDay()}`;
+  dayCounter.textContent = t("day", { day: game.dayManager.getCurrentDay() });
+}
+
+function updateText(): void {
+  // Update the game title
+  title.textContent = t("game_name");
+
+  // Update the plant type display
+  updatePlantSelect();
+
+  // Update the score display
+  updateScoreDisplay();
+
+  // Update the day button text
+  advanceDayButton.textContent = t("finish_day");
+
+  // Update save/load button text
+  // FIXME: Using prompt and not button text. Also need to translate the prompt text.
+  // saveButton.textContent = t("save_game_prompt");
+  // loadButton.textContent = t("load_game_prompt");
+
+  // Update undo/redo button text
+  undoButton.textContent = t("undo_checkpoint");
+  redoButton.textContent = t("redo_checkpoint");
+
+  // Update instructions text
+  updateInstructions();
 }
 
 function updateAllDisplays(): void {
@@ -214,7 +245,7 @@ function updateAllDisplays(): void {
 }
 
 advanceDayButton.onclick = () => {
-  // Game Over
+  // Game Over: Reached Score Goal
   if (calculateScore() >= SCORE_GOAL) {
     alert(
       "Game Over! You surpassed the goal! Youe final score: " +
@@ -227,6 +258,8 @@ advanceDayButton.onclick = () => {
 
     return;
   }
+
+  // Game Over: Reached End Day
   if (game.dayManager.getCurrentDay() >= END_DAY) {
     alert("Game Over! Your final score is: " + calculateScore());
 
@@ -275,7 +308,7 @@ function handleLoad(): void {
       updateAllDisplays();
       alert(`Game loaded from slot ${slot}`);
     } else {
-      alert(`No save found in slot ${slot}`);
+      alert(`No save found for slot ${slot}`);
     }
   }
 }
@@ -333,53 +366,86 @@ redoButton.onclick = () => {
   }
 };
 
-dayControls.appendChild(dayCounter);
-dayControls.appendChild(advanceDayButton);
-dayControls.appendChild(saveButton);
-dayControls.appendChild(loadButton);
-dayControls.appendChild(undoButton);
-dayControls.appendChild(redoButton);
+dayControls.append(
+  dayCounter,
+  advanceDayButton,
+  saveButton,
+  loadButton,
+  undoButton,
+  redoButton,
+);
 gameHud.appendChild(dayControls);
 
 // ====== Instructions ======
 const instructions = document.createElement("div");
-{
-  const description = document.createElement("p");
+instructions.id = "instructions-debug"; // Updated ID for clarity
 
-  const controls: { [key: string]: string } = {
-    "Left Click": "Sow a nearby plant",
-    "Right Click": "Reap a nearby plant",
-    "WASD / Arrow Keys": "Move player",
-    "1 / 2 / 3": "Switch plant type",
-  };
+// Create description and controls dynamically
+const description = document.createElement("p");
+description.id = "instructions-description"; // Add an ID for updating dynamically
+instructions.appendChild(description);
 
-  instructions.innerHTML = "<h2>Instructions</h2><hr>";
-  for (const [input, action] of Object.entries(controls)) {
-    instructions.innerHTML += `<p><strong>${input}</strong>: ${action}</p>`;
-  }
+function updateInstructions(): void {
+  // Locate the instructions container
+  const instructions = document.querySelector(
+    "#instructions-debug",
+  ) as HTMLDivElement;
 
-  // TODO: Describe mechanics and limitations (e.g. player reach, plant growth, water/sunlight, etc.)
-  description.innerText =
-    `Click the cells current or adjacent to the farmer to sow or reap plants. \
-    Click the Finish Day button to end your turn, advance the day, and autosave a checkpoint. \
-    You can use the Undo and Redo Checkpoint buttons if you want to replay a day/checkpoint. \
-    You can also manually create and load saves mid-day, creating more checkpoints for extra granularity. \
-    \n
-    Plants require water and sunlight to grow. \
-    Different plants have different requirements (see below). \
-    Don't overcrowd plants or they will die (Black squares, reap to clear). \
-    See how high of a score you can get in ${END_DAY} days!`;
-  instructions.appendChild(description);
-  for (const type in PlantType) {
-    if (!isNaN(Number(type))) {
-      const typeNum: number = Number(type);
-      const description = getPlantDescription(typeNum);
-      if (description) {
-        instructions.innerHTML += description;
+  if (instructions) {
+    // Clear existing content
+    instructions.innerHTML = `<h2>${t("controls")}</h2><hr>`;
+
+    // Add translated controls dynamically
+    const controls: Map<string, string> = new Map([
+      [t("left_click"), t("controls_left_click")],
+      [t("right_click"), t("controls_right_click")],
+      [t("arrowsWasd"), t("controls_movement")],
+      [t("cycle_plant"), t("controls_switch")],
+    ]);
+
+    for (const [input, action] of controls) {
+      instructions.innerHTML += `<p><strong>${input}</strong>: ${action}</p>`;
+    }
+
+    // Add description text dynamically
+    instructions.innerHTML += `<p id="instructions-description">${
+      t("description", { end_day: END_DAY })
+    }</p>`;
+
+    // Update plant-specific instructions
+    for (const type in PlantType) {
+      if (!isNaN(Number(type))) {
+        const typeNum: number = Number(type);
+        if (typeNum === PlantType.Withered) continue;
+        const description = getPlantDescription(typeNum);
+        if (description) {
+          instructions.innerHTML += description;
+        }
       }
     }
   }
 }
+
+const languageSelector = document.createElement("select");
+["en", "zh", "ar"].forEach((lang) => {
+  const option = document.createElement("option");
+  option.value = lang;
+  option.textContent = lang.toUpperCase();
+  languageSelector.appendChild(option);
+});
+
+languageSelector.onchange = (e) => {
+  const selectedLanguage = (e.target as HTMLSelectElement).value as Language;
+  setLanguage(selectedLanguage);
+
+  // Update text direction for RTL languages
+  document.documentElement.dir = selectedLanguage === "ar" ? "rtl" : "ltr";
+
+  // Refresh all dynamic text
+  updateText();
+};
+
+document.body.insertBefore(languageSelector, app);
 
 // ====== Keyboard Listeners ======
 document.addEventListener("keydown", (e) => {
@@ -406,27 +472,29 @@ document.addEventListener("keydown", (e) => {
       break;
     case "1":
     case "num1":
-      game.player.setCurrentPlantType(PlantType.Corn);
+    case "-":
+      game.player.cyclePlantType(false);
       updatePlantSelect();
       break;
     case "2":
     case "num2":
-      game.player.setCurrentPlantType(PlantType.Cactus);
-      updatePlantSelect();
-      break;
-    case "3":
-    case "num3":
-      game.player.setCurrentPlantType(PlantType.Flower);
+    case "=":
+      game.player.cyclePlantType(true);
       updatePlantSelect();
       break;
   }
 });
 
 // ====== Initialize DOM display ======
-app.appendChild(title);
-app.appendChild(gameGrid);
-app.appendChild(gameHud);
-app.appendChild(instructions);
+app.append(
+  title,
+  gameGrid,
+  gameHud,
+  instructions,
+);
+
+updatePlantSelect();
 updateAllDisplays();
+updateText();
 
 checkForAutoSave(); // Check for auto-save on launch

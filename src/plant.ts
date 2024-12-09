@@ -3,6 +3,10 @@ import { Cell, Grid, Plant } from "./grid.ts";
 import { Position } from "./position.ts";
 import { StatisticTracker } from "./statistic.ts";
 
+// localization
+import { tl } from "./translation.ts";
+import plantTranslations from "./plant-translation.json" with { type: "json" };
+
 export const enum PlantAction {
   SOW,
   REAP,
@@ -24,7 +28,6 @@ export interface PlantTypeDefinition {
   canGrow(grid: Grid, pos: Position): boolean;
   canReap(grid: Grid, pos: Position): boolean;
   process(grid: Grid, pos: Position): void;
-  getDescription(): string;
 }
 
 const CENTER_INDEX = 4;
@@ -97,15 +100,6 @@ const commonProcess = function (
   }
 };
 
-// TODO: diversify instructions
-const commonDescription = function (this: PlantTypeDefinition): string {
-  return `<p><strong>${this.name}</strong>:<br>` +
-    `To Grow:<br> ${this.waterToGrow} water,<br>` +
-    `${this.sunToGrow} sunlight,<br>` +
-    `${this.maxCrowding} maximum adjacent plants<br>` +
-    `Can sow at level ${this.maxGrowth}</p>`;
-};
-
 const plantDefinitions: PlantTypeDefinition[] = [
   {
     name: "Corn",
@@ -121,9 +115,6 @@ const plantDefinitions: PlantTypeDefinition[] = [
     },
     process: function (grid: Grid, pos: Position): void {
       commonProcess.call(this, grid, pos);
-    },
-    getDescription: function (): string {
-      return commonDescription.call(this);
     },
   },
   {
@@ -141,9 +132,6 @@ const plantDefinitions: PlantTypeDefinition[] = [
     process: function (grid: Grid, pos: Position): void {
       commonProcess.call(this, grid, pos);
     },
-    getDescription: function (): string {
-      return commonDescription.call(this);
-    },
   },
   {
     name: "Flower",
@@ -160,9 +148,6 @@ const plantDefinitions: PlantTypeDefinition[] = [
     process: function (grid: Grid, pos: Position): void {
       commonProcess.call(this, grid, pos);
     },
-    getDescription: function (): string {
-      return commonDescription.call(this);
-    },
   },
   {
     name: "Withered",
@@ -173,9 +158,6 @@ const plantDefinitions: PlantTypeDefinition[] = [
       return true;
     },
     process: function (): void {},
-    getDescription: function (): string {
-      return "";
-    },
   },
   {
     name: "Weed",
@@ -215,13 +197,6 @@ const plantDefinitions: PlantTypeDefinition[] = [
         }
       }
     },
-    getDescription: function (): string {
-      return `<p><strong>${this.name}</strong>:<br>` +
-        `To Grow:<br> In any conditions` +
-        `Growth maxes out at ${this.maxGrowth}<br>` +
-        `Can remove at any level` +
-        `Will crowd out other plants and spread</p>`;
-    },
   },
 ]; // ALWAYS add new types at the end to avoid changing indices
 
@@ -240,9 +215,15 @@ export function getPlantTypeName(type: PlantType): string {
   return PlantType[type];
 }
 
+function getLocalizedDescription(type: PlantType): string {
+  return tl(plantTranslations.descriptions, type, {
+    ...plantDefinitions[type],
+  });
+}
+
 export function getPlantDescription(type: PlantType): string {
   if (type === PlantType.NONE) return "";
-  return plantDefinitions[type].getDescription();
+  return getLocalizedDescription(type);
 }
 
 export function getPlantTypeCssName(type: PlantType): string {
