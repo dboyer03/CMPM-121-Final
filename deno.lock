@@ -1,6 +1,7 @@
 {
   "version": "4",
   "specifiers": {
+    "npm:toml@3": "3.0.0",
     "npm:vite@*": "5.4.8"
   },
   "npm": {
@@ -195,6 +196,9 @@
     "source-map-js@1.2.1": {
       "integrity": "sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA=="
     },
+    "toml@3.0.0": {
+      "integrity": "sha512-y/mWCZinnvxjTKYhJ+pYxwD0mRLVvOtdS2Awbgxln6iEnt4rk0yBxeSBHkGJcPucRiG0e55mwWp+g/05rsrd6w=="
+    },
     "vite@5.4.8": {
       "integrity": "sha512-FqrItQ4DT1NC4zCUqMB4c4AZORMKIa0m8/URVCZ77OZ/QSNeJ54bU1vrFADbDsuwfIPcgknRkmqakQcgnL4GiQ==",
       "dependencies": [
@@ -204,5 +208,10 @@
         "rollup"
       ]
     }
+  },
+  "workspace": {
+    "dependencies": [
+      "npm:toml@3"
+    ]
   }
 }

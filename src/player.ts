@@ -1,14 +1,14 @@
 // player
 
 import { Position } from "./position.ts";
-import { Grid } from "./grid.ts";
-import { PlantAction, PlantType } from "./plant.ts";
+import { Grid, GridAction } from "./grid.ts";
+import { PlantAction, PlantType, tryReap, trySow } from "./plant.ts";
 import { StatisticSubject, StatisticTracker } from "./statistic.ts";
 
 export class Player extends StatisticSubject {
   private position: Position;
   private grid: Grid;
-  private currentPlantType: PlantType = PlantType.GREEN_CIRCLE;
+  private currentPlantType: PlantType = PlantType.Corn;
 
   constructor(grid: Grid, startPos: Position, statTracker: StatisticTracker) {
     super(statTracker);
@@ -46,7 +46,7 @@ export class Player extends StatisticSubject {
     return { ...this.position };
   }
 
-  setPlantType(type: PlantType) {
+  setCurrentPlantType(type: PlantType) {
     this.currentPlantType = type;
   }
 
@@ -54,16 +54,29 @@ export class Player extends StatisticSubject {
     return this.currentPlantType;
   }
 
-  interactWithPlant(action: PlantAction, targetPos: Position): boolean {
+  // FIXME: Consider refactoring to support other types of interactions.
+  //   For now, only plant interactions are supported but have been extracted to plant.ts
+  interactWithPlant(action: GridAction, targetPos: Position): boolean {
     if (!this.grid.isWithinRange(this.position, targetPos)) {
       return false;
     }
 
     let result = false;
     if (action === PlantAction.SOW) {
-      result = this.grid.sowPlant(targetPos, this.currentPlantType);
+      result = trySow(this.grid, targetPos, this.currentPlantType);
+      if (result) {
+        this.statisticTracker.increment("plantSown", this.currentPlantType);
+      }
     } else {
-      result = this.grid.reapPlant(targetPos) !== null;
+      const originalType: PlantType = this.grid.getPlant(targetPos).type;
+      result = tryReap(this.grid, targetPos);
+      if (
+        result &&
+        originalType !== PlantType.Withered &&
+        originalType !== PlantType.Weed
+      ) {
+        this.statisticTracker.increment("plantReaped", this.currentPlantType);
+      }
     }
 
     return result;

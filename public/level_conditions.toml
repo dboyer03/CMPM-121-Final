@@ -1,0 +1,15 @@
+[starting_conditions]
+grid_size = 10
+starting_positionX = 0
+starting_positionY = 0
+sunny_chances = 0.5
+rainy_chances = 0.3
+hot_chances = 0.2
+
+
+[victory_conditions]
+end_day = 31
+end_score = 50
+
+[events]
+drought_day = 15

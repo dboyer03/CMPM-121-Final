@@ -9,6 +9,7 @@ export interface GameConfig {
   // All config should be readonly
   readonly gridWidth: number;
   readonly gridHeight: number;
+  //readonly startingPosition: Position;
 }
 
 export interface Game {
@@ -16,6 +17,7 @@ export interface Game {
   grid: Grid;
   dayManager: DayManager;
   player: Player;
+  weather: string;
 }
 
 interface Checkpoint {
@@ -23,6 +25,7 @@ interface Checkpoint {
   gridState: string; // base64-encoded Uint8Array of 4-byte structs represent cell and plant states
   playerPosition: Position;
   dayCount: number;
+  weather: string;
 }
 
 interface SaveData {
@@ -57,6 +60,7 @@ export class StateManager {
       ),
       playerPosition: game.player.getPosition(),
       dayCount: game.dayManager.getCurrentDay(),
+      weather: game.dayManager.getCurrentWeather(),
     };
 
     return checkpoint;
@@ -74,7 +78,13 @@ export class StateManager {
     game.grid.setState(
       Uint8Array.from(atob(checkpoint.gridState), (c) => c.charCodeAt(0)),
     );
-    game.dayManager = new DayManager(game.grid, checkpoint.dayCount, true);
+    game.dayManager = new DayManager(
+      game.grid,
+      game.statTracker,
+      checkpoint.dayCount,
+      checkpoint.weather,
+      true,
+    );
     game.player = new Player(
       game.grid,
       checkpoint.playerPosition,
@@ -105,7 +115,7 @@ export class StateManager {
       this.config.gridHeight,
       game.statTracker,
     );
-    game.dayManager = new DayManager(game.grid);
+    game.dayManager = new DayManager(game.grid, game.statTracker);
     game.player = new Player(game.grid, { x: 0, y: 0 }, game.statTracker);
 
     const fullGame: Game = game as Game;
@@ -141,6 +151,10 @@ export class StateManager {
   clearHistory(): void {
     this.history = [];
     this.current = -1;
+  }
+
+  deleteAutoSave(): void {
+    localStorage.removeItem(`save_${StateManager.AUTO_SLOT}`);
   }
 
   trySaveGame(game: Game, slot: string): boolean {

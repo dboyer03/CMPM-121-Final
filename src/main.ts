@@ -1,14 +1,35 @@
 // ====== Main + Imports ======
 import { Game, GameConfig, StateManager } from "./state.ts";
-import { getCssName, PlantAction, PlantType, PlantTypeInfo } from "./plant.ts";
+import {
+  getPlantDescription,
+  getPlantTypeCssName,
+  getPlantTypeName,
+  PlantAction,
+  PlantType,
+} from "./plant.ts";
+import { parse } from "toml";
 
 import "./style.css";
 import "./game.css";
 
 // ====== Consts ======
 const GAME_NAME = "CMPM 121 Final Project - Group 33";
-const GRID_SIZE = 10;
-const END_DAY = 31;
+const fileURL = import.meta.resolve("../level_conditions.toml");
+async function fetchFile(url: string) {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`repeat`);
+  }
+  return await response.text();
+}
+const fileContent = await fetchFile(fileURL);
+const data = parse(fileContent);
+
+const GRID_SIZE = data.starting_conditions.grid_size;
+const END_DAY = data.victory_conditions.end_day;
+const SCORE_GOAL = data.victory_conditions.end_score;
+const EVENT_DAY = data.events.drought_day;
+
 const GAME_CONFIG: GameConfig = {
   gridWidth: GRID_SIZE,
   gridHeight: GRID_SIZE,
@@ -24,6 +45,31 @@ title.textContent = GAME_NAME;
 // ====== Initialize Game State ======
 const stateManager: StateManager = new StateManager(GAME_CONFIG);
 let game: Game = stateManager.newGame();
+let CURRENT_WEATHER = game.dayManager.getCurrentWeather();
+
+function weatherSelect(): string {
+  const WEATHER_OPTIONS = [
+    { weather: "sunny", weight: data.starting_conditions.sunny_chances },
+    { weather: "rainy", weight: data.starting_conditions.rainy_chances },
+    { weather: "hot", weight: data.starting_conditions.hot_chances },
+  ];
+
+  const totalWeight = WEATHER_OPTIONS.reduce(
+    (sum, WEATHER_OPTIONS) => sum + WEATHER_OPTIONS.weight,
+    0,
+  );
+  const random = Math.random() * totalWeight;
+
+  let cumulativeWeight = 0;
+  for (const option of WEATHER_OPTIONS) {
+    cumulativeWeight += option.weight;
+    if (random <= cumulativeWeight) {
+      return option.weather;
+    }
+  }
+
+  throw new Error("Invalid weight configuration");
+}
 
 // ====== Game Scoring ======
 function calculateScore(): number {
@@ -73,7 +119,7 @@ function updateGridDisplay(): void {
       if (plant.type !== PlantType.NONE) {
         const plantElement = document.createElement("div");
         plantElement.className = `plant type-${
-          getCssName(plant.type)
+          getPlantTypeCssName(plant.type)
         } level-${plant.growthLevel}`;
         cell.appendChild(plantElement);
       }
@@ -81,13 +127,17 @@ function updateGridDisplay(): void {
       // Add click handlers for plant interactions
       cell.addEventListener("contextmenu", (e) => {
         e.preventDefault(); // prevent default right-click menu
-        game.player.interactWithPlant(PlantAction.REAP, pos);
-        updateGridDisplay();
+        if (game.player.interactWithPlant(PlantAction.REAP, pos)) {
+          updateGridDisplay();
+          updateScoreDisplay();
+        }
       });
 
       cell.addEventListener("click", (_e) => {
-        game.player.interactWithPlant(PlantAction.SOW, pos);
-        updateGridDisplay();
+        if (game.player.interactWithPlant(PlantAction.SOW, pos)) {
+          updateGridDisplay();
+          updateScoreDisplay();
+        }
       });
 
       // Add player if position matches
@@ -112,14 +162,14 @@ gameHud.id = "game-hud";
 
 const plantTypeDisplay = document.createElement("div");
 plantTypeDisplay.className = "current-plant-type";
-const initialTypeName = PlantTypeInfo[game.player.getCurrentPlantType()].name;
+const initialTypeName = getPlantTypeName(game.player.getCurrentPlantType());
 plantTypeDisplay.textContent = `Current Plant: ${initialTypeName}`;
 gameHud.appendChild(plantTypeDisplay);
 
 function updatePlantSelect(): void {
   const plantTypeDisplay = document.querySelector(".current-plant-type");
   if (plantTypeDisplay) {
-    const typeName = PlantTypeInfo[game.player.getCurrentPlantType()].name;
+    const typeName = getPlantTypeName(game.player.getCurrentPlantType());
     plantTypeDisplay.textContent = `Current Plant: ${typeName}`;
   }
 }
@@ -132,6 +182,14 @@ function updateScoreDisplay(): void {
   scoreDisplay.textContent = `Score: ${calculateScore()}`;
 }
 gameHud.appendChild(scoreDisplay);
+
+const weatherDisplay = document.createElement("p");
+weatherDisplay.className = "weather";
+function updateWeatherDisplay(): void {
+  weatherDisplay.textContent =
+    `Current Weather: ${game.dayManager.getCurrentWeather()}`;
+}
+gameHud.appendChild(weatherDisplay);
 
 // ====== HUD: Day Button ======
 const dayControls = document.createElement("div");
@@ -152,12 +210,16 @@ function updateAllDisplays(): void {
   updateGridDisplay();
   updateDayDisplay();
   updateScoreDisplay();
+  updateWeatherDisplay();
 }
 
 advanceDayButton.onclick = () => {
   // Game Over
-  if (game.dayManager.getCurrentDay() >= END_DAY) {
-    alert("Game Over! Your final score is: " + calculateScore());
+  if (calculateScore() >= SCORE_GOAL) {
+    alert(
+      "Game Over! You surpassed the goal! Youe final score: " +
+        calculateScore(),
+    );
 
     game = stateManager.newGame(GAME_CONFIG);
     updateAllDisplays();
@@ -165,9 +227,20 @@ advanceDayButton.onclick = () => {
 
     return;
   }
+  if (game.dayManager.getCurrentDay() >= END_DAY) {
+    alert("Game Over! Your final score is: " + calculateScore());
+
+    game = stateManager.newGame(GAME_CONFIG);
+    updateAllDisplays();
+    stateManager.clearHistory();
+    stateManager.deleteAutoSave();
+
+    return;
+  }
 
   // Next day
-  game.dayManager.advanceDay();
+  CURRENT_WEATHER = weatherSelect();
+  game.dayManager.advanceDay(CURRENT_WEATHER, EVENT_DAY);
   stateManager.autoSave(game);
   updateAllDisplays();
 };
@@ -190,7 +263,9 @@ function handleLoad(): void {
 
   const slot = prompt(
     `Enter save slot name:\nAvailable slots:\n${
-      slots.map((s) => s.replace("save_", "")).join("\n")
+      slots
+        .map((s) => s.replace("save_", ""))
+        .join("\n")
     }`,
   );
   if (slot) {
@@ -295,19 +370,13 @@ const instructions = document.createElement("div");
     Don't overcrowd plants or they will die (Black squares, reap to clear). \
     See how high of a score you can get in ${END_DAY} days!`;
   instructions.appendChild(description);
-  {
-    let i = 1;
-    for (const info in PlantTypeInfo) {
-      if (info === "withered") continue;
-      instructions.innerHTML += `<p><strong>(${i}) ${
-        PlantTypeInfo[info].name
-      }</strong>:<br>
-      To Grow: ${PlantTypeInfo[info].waterToGrow} water,
-      ${PlantTypeInfo[info].sunToGrow} sunlight,
-      ${PlantTypeInfo[info].maxCrowding} maximum adjacent plants
-    <br>
-      Can sow at level ${PlantTypeInfo[info].maxGrowth}</p>`;
-      i++;
+  for (const type in PlantType) {
+    if (!isNaN(Number(type))) {
+      const typeNum: number = Number(type);
+      const description = getPlantDescription(typeNum);
+      if (description) {
+        instructions.innerHTML += description;
+      }
     }
   }
 }
@@ -337,17 +406,17 @@ document.addEventListener("keydown", (e) => {
       break;
     case "1":
     case "num1":
-      game.player.setPlantType(PlantType.GREEN_CIRCLE);
+      game.player.setCurrentPlantType(PlantType.Corn);
       updatePlantSelect();
       break;
     case "2":
     case "num2":
-      game.player.setPlantType(PlantType.YELLOW_TRIANGLE);
+      game.player.setCurrentPlantType(PlantType.Cactus);
       updatePlantSelect();
       break;
     case "3":
     case "num3":
-      game.player.setPlantType(PlantType.PURPLE_SQUARE);
+      game.player.setCurrentPlantType(PlantType.Flower);
       updatePlantSelect();
       break;
   }

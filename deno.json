@@ -14,5 +14,8 @@
   },
   "fmt": {
     "include": ["src/"]
+  },
+  "imports": {
+    "toml": "npm:toml@^3.0.0"
   }
 }
