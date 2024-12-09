@@ -1,17 +1,32 @@
 // ====== Main + Imports ======
 import { Game, GameConfig, StateManager } from "./state.ts";
 import { getCssName, PlantAction, PlantType, PlantTypeInfo } from "./plant.ts";
+import { parse } from "toml";
 
+ 
 import "./style.css";
 import "./game.css";
 
 // ====== Consts ======
 const GAME_NAME = "CMPM 121 Final Project - Group 33";
-const GRID_SIZE = 10;
-const END_DAY = 31;
+const fileURL = import.meta.resolve("../level_conditions.toml");
+async function fetchFile(url: string) {
+  const response = await fetch(url);
+  if (!response.ok) { 
+    throw new Error(`repeat`);
+  }
+  return await response.text();
+}
+const fileContent = await fetchFile(fileURL);
+const data = parse(fileContent);
+
+const GRID_SIZE = data.starting_conditions.grid_size;
+const END_DAY = data.victory_conditions.end_day;
+const SCORE_GOAL = data.victory_conditions.end_score;
+
 const GAME_CONFIG: GameConfig = {
-  gridWidth: GRID_SIZE,
-  gridHeight: GRID_SIZE,
+  gridWidth: GRID_SIZE, 
+  gridHeight: GRID_SIZE
 };
 
 const app = document.querySelector<HTMLDivElement>("#app")!;
@@ -149,6 +164,7 @@ function updateDayDisplay(): void {
 }
 
 function updateAllDisplays(): void {
+
   updateGridDisplay();
   updateDayDisplay();
   updateScoreDisplay();
@@ -156,6 +172,15 @@ function updateAllDisplays(): void {
 
 advanceDayButton.onclick = () => {
   // Game Over
+  if (calculateScore() >= SCORE_GOAL){
+    alert("Game Over! You surpassed the goal! Youe final score: " + calculateScore());
+
+    game = stateManager.newGame(GAME_CONFIG);
+    updateAllDisplays();
+    stateManager.clearHistory();
+
+    return;
+  }
   if (game.dayManager.getCurrentDay() >= END_DAY) {
     alert("Game Over! Your final score is: " + calculateScore());
 

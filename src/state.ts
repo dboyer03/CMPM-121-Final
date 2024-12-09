@@ -9,6 +9,7 @@ export interface GameConfig {
   // All config should be readonly
   readonly gridWidth: number;
   readonly gridHeight: number;
+  //readonly startingPosition: Position;
 }
 
 export interface Game {
