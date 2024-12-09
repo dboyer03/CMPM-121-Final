@@ -150,6 +150,34 @@ export class Grid extends StatisticSubject {
     this.statisticTracker.setIfMax("maxGridAlive", livingPlants);
   }
 
+  updateDrought(){
+    let livingPlants = 0;
+    for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
+        const pos: Position = { x, y };
+        const cell: Cell = this.getCell(pos);
+        const plant: Plant = this.getPlant(pos);
+
+        // update plant
+        if (
+          plant.type !== PlantType.NONE && plant.type !== PlantType.WITHERED
+        ) {
+            const result = Math.random() < 0.75;
+            if(result == true){
+              this.statisticTracker.increment("plantDied", plant.type); // notify before modification
+              this.setPlant(pos, { type: PlantType.WITHERED, growthLevel: 1 });
+            } else {
+              // plant didn't die
+              this.setPlant(pos, plant);
+              livingPlants++;
+          }
+        }
+        this.setCell(pos, cell);
+      }
+    }
+    this.statisticTracker.setIfMax("maxGridAlive", livingPlants);
+  }
+
   isWithinRange(playerPos: Position, targetPos: Position): boolean {
     const dx = Math.abs(playerPos.x - targetPos.x);
     const dy = Math.abs(playerPos.y - targetPos.y);

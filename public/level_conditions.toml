@@ -9,4 +9,7 @@ hot_chances = 0.2
 
 [victory_conditions]
 end_day = 31
-end_score = 5
+end_score = 50
+
+[events]
+drought_day = 15
