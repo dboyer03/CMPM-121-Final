@@ -25,10 +25,15 @@ export class DayManager {
     if (!preserveEnvironment) this.grid.updateEnvironment(weather);
   }
 
-  advanceDay(weather: string): void {
+  advanceDay(weather: string, event_day: number): void {
     this.dayCount++;
-    this.grid.updateEnvironment(weather);
-    this.weather = weather;
+    if (this.dayCount != event_day) {
+      this.grid.updateEnvironment(weather);
+      this.weather = weather;
+    } else {
+      this.grid.updateDrought();
+      this.weather = "drought";
+    }
     plantProcessor(this.grid, this.statTracker);
   }
 

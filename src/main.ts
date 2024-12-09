@@ -29,6 +29,7 @@ const data = parse(fileContent);
 const GRID_SIZE = data.starting_conditions.grid_size;
 const END_DAY = data.victory_conditions.end_day;
 const SCORE_GOAL = data.victory_conditions.end_score;
+const EVENT_DAY = data.events.drought_day;
 
 const GAME_CONFIG: GameConfig = {
   gridWidth: GRID_SIZE,
@@ -186,7 +187,7 @@ gameHud.appendChild(scoreDisplay);
 const weatherDisplay = document.createElement("p");
 weatherDisplay.className = "weather";
 function updateWeatherDisplay(): void{
-  weatherDisplay.textContent = `Current Weather: ${CURRENT_WEATHER}`
+  weatherDisplay.textContent = `Current Weather: ${game.dayManager.getCurrentWeather()}`
 }
 gameHud.appendChild(weatherDisplay);
 
@@ -239,7 +240,7 @@ advanceDayButton.onclick = () => {
 
   // Next day
   CURRENT_WEATHER = weatherSelect();
-  game.dayManager.advanceDay(CURRENT_WEATHER);
+  game.dayManager.advanceDay(CURRENT_WEATHER, EVENT_DAY);
   stateManager.autoSave(game);
   updateAllDisplays();
 };
