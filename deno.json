@@ -14,5 +14,9 @@
   },
   "fmt": {
     "include": ["src/"]
+  },
+  "imports": {
+    "fs": "npm:fs@^0.0.1-security",
+    "toml": "npm:toml@^3.0.0"
   }
 }
