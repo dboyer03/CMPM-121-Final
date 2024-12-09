@@ -173,13 +173,7 @@ function updateText(): void {
   redoButton.textContent = t("redo_checkpoint");
 
   // Update instructions text
-  const description = document.querySelector("#instructions-description") as HTMLParagraphElement;
-  if (description) {
-    description.innerText = t("description", { end_day: END_DAY });
-  }
-
-
-  
+ updateInstructions();
 }
 
 function updateAllDisplays(): void {
@@ -187,6 +181,7 @@ function updateAllDisplays(): void {
   updateDayDisplay();
   updateScoreDisplay();
   updateText();
+  updateInstructions();
 }
 
 advanceDayButton.onclick = () => {
@@ -303,49 +298,93 @@ gameHud.appendChild(dayControls);
 
 // ====== Instructions ======
 const instructions = document.createElement("div");
-{
-  const description = document.createElement("p");
 
-  const controls: { [key: string]: string } = {
-    "Left Click": "Sow a nearby plant",
-    "Right Click": "Reap a nearby plant",
-    "WASD / Arrow Keys": "Move player",
-    "1 / 2 / 3": "Switch plant type",
-  };
+// Create description and controls dynamically
+const description = document.createElement("p");
+description.id = "instructions-description"; // Add an ID for updating dynamically
 
-  instructions.innerHTML = "<h2>Instructions</h2><hr>";
-  for (const [input, action] of Object.entries(controls)) {
-    instructions.innerHTML += `<p><strong>${input}</strong>: ${action}</p>`;
-  }
+instructions.innerHTML = `<h2>${t("controls")}</h2><hr>`;
 
-  // TODO: Describe mechanics and limitations (e.g. player reach, plant growth, water/sunlight, etc.)
-  description.innerText =
-    `Click the cells current or adjacent to the farmer to sow or reap plants. \
-    Click the Finish Day button to end your turn, advance the day, and autosave a checkpoint. \
-    You can use the Undo and Redo Checkpoint buttons if you want to replay a day/checkpoint. \
-    You can also manually create and load saves mid-day, creating more checkpoints for extra granularity. \
-    \n
-    Plants require water and sunlight to grow. \
-    Different plants have different requirements (see below). \
-    Don't overcrowd plants or they will die (Black squares, reap to clear). \
-    See how high of a score you can get in ${END_DAY} days!`;
-  instructions.appendChild(description);
-  {
+const controls: { [key: string]: string } = {
+  "Left Click": t("controls_left_click"),
+  "Right Click": t("controls_right_click"),
+  "WASD / Arrow Keys": t("controls_movement"),
+  "1 / 2 / 3": t("controls_switch"),
+};
+
+// Add controls dynamically with line breaks
+instructions.innerHTML += Object.entries(controls)
+  .map(([input, action]) => `<p><strong>${input}</strong>: ${action}</p>`)
+  .join("\n");
+
+// Add the description dynamically
+description.innerText = t("description", { end_day: END_DAY });
+instructions.appendChild(description);
+
+// Add plant-specific instructions
+let i = 1;
+for (const info in PlantTypeInfo) {
+  if (info === "withered") continue;
+  instructions.innerHTML += `<p><strong>(${i}) ${
+    PlantTypeInfo[info].name
+  }</strong>:<br>
+  ${t("plant_instructions.plant_details", {
+    index: i,
+    name: PlantTypeInfo[info].name,
+    water: PlantTypeInfo[info].waterToGrow,
+    sunlight: PlantTypeInfo[info].sunToGrow,
+    crowding: PlantTypeInfo[info].maxCrowding,
+    maxGrowth: PlantTypeInfo[info].maxGrowth,
+  })}</p>`;
+  i++;
+}
+
+
+
+function updateInstructions(): void {
+  const instructions = document.querySelector("#instructions") as HTMLDivElement;
+  const description = document.querySelector("#instructions-description") as HTMLParagraphElement;
+
+  if (instructions && description) {
+    // Clear previous instructions
+    instructions.innerHTML = `<h2>${t("controls")}</h2><hr>`;
+
+    // Dynamically generate controls using translations
+    const controls: { [key: string]: string } = {
+      "Left Click": t("controls_left_click"),
+      "Right Click": t("controls_right_click"),
+      "WASD / Arrow Keys": t("controls_movement"),
+      "1 / 2 / 3": t("controls_switch"),
+    };
+
+    // Add controls dynamically with line breaks
+    instructions.innerHTML += Object.entries(controls)
+      .map(([input, action]) => `<p><strong>${input}</strong>: ${action}</p>`)
+      .join("\n");
+
+    // Update the description
+    description.innerText = t("description", { end_day: END_DAY });
+
+    // Update plant-specific instructions
     let i = 1;
     for (const info in PlantTypeInfo) {
       if (info === "withered") continue;
       instructions.innerHTML += `<p><strong>(${i}) ${
         PlantTypeInfo[info].name
       }</strong>:<br>
-      To Grow: ${PlantTypeInfo[info].waterToGrow} water,
-      ${PlantTypeInfo[info].sunToGrow} sunlight,
-      ${PlantTypeInfo[info].maxCrowding} maximum adjacent plants
-    <br>
-      Can sow at level ${PlantTypeInfo[info].maxGrowth}</p>`;
+      ${t("plant_instructions.plant_details", {
+        index: i,
+        name: PlantTypeInfo[info].name,
+        water: PlantTypeInfo[info].waterToGrow,
+        sunlight: PlantTypeInfo[info].sunToGrow,
+        crowding: PlantTypeInfo[info].maxCrowding,
+        maxGrowth: PlantTypeInfo[info].maxGrowth,
+      })}</p>`;
       i++;
     }
   }
 }
+
 
 const languageSelector = document.createElement("select");
 ["en", "zh", "ar"].forEach((lang) => {
