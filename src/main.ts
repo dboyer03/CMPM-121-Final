@@ -298,7 +298,7 @@ gameHud.appendChild(dayControls);
 
 // ====== Instructions ======
 const instructions = document.createElement("div");
-instructions.id = "instructions";
+instructions.id = "instructions-debug"; // Updated ID for clarity
 
 // Create description and controls dynamically
 const description = document.createElement("p");
@@ -342,7 +342,7 @@ for (const info in PlantTypeInfo) {
 
 function updateInstructions(): void {
   // Locate the instructions container
-  const instructions = document.querySelector("#instructions") as HTMLDivElement;
+  const instructions = document.querySelector("#instructions-debug") as HTMLDivElement;
 
   if (instructions) {
     // Clear existing content
