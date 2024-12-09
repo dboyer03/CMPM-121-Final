@@ -8,8 +8,10 @@ import {
   PlantType,
 } from "./plant.ts";
 import { parse } from "toml";
-import { t, setLanguage, Language } from "./translation.ts";
 
+// localization
+import { Language, setLanguage, t, tl } from "./translation.ts";
+import plantTranslations from "./plant-translation.json" with { type: "json" };
 
 import "./style.css";
 import "./game.css";
@@ -42,7 +44,7 @@ const app = document.querySelector<HTMLDivElement>("#app")!;
 // ====== Title ======
 document.title = GAME_NAME;
 const title = document.createElement("h1");
-title.textContent = t("game_name");;
+title.textContent = t("game_name");
 
 // ====== Initialize Game State ======
 const stateManager: StateManager = new StateManager(GAME_CONFIG);
@@ -166,15 +168,16 @@ const plantTypeDisplay = document.createElement("div");
 plantTypeDisplay.className = "current-plant-type";
 const initialTypeName = getPlantTypeName(game.player.getCurrentPlantType());
 plantTypeDisplay.textContent = `Current Plant: ${initialTypeName}`;
-gameHud.appendChild(plantTypeDisplay);
 
 function updatePlantSelect(): void {
   const plantTypeDisplay = document.querySelector(".current-plant-type");
   if (plantTypeDisplay) {
-    const typeName = getPlantTypeName(game.player.getCurrentPlantType());
-    plantTypeDisplay.textContent = `Current Plant: ${typeName}`;
+    plantTypeDisplay.textContent = `${t("current_plant")}: ${
+      tl(plantTranslations.names, game.player.getCurrentPlantType())
+    }`;
   }
 }
+gameHud.appendChild(plantTypeDisplay);
 
 // ====== HUD: Score ======
 const scoreDisplay = document.createElement("p");
@@ -213,25 +216,25 @@ function updateText(): void {
   title.textContent = t("game_name");
 
   // Update the plant type display
-  const plantTypeDisplay = document.querySelector(".current-plant-type");
-  if (plantTypeDisplay) {
-    const typeName = getPlantTypeName(game.player.getCurrentPlantType());
-    plantTypeDisplay.textContent = `${t("current_plant")}: ${typeName}`;
-  }
+  updatePlantSelect();
+
+  // Update the score display
+  updateScoreDisplay();
 
   // Update the day button text
   advanceDayButton.textContent = t("finish_day");
 
   // Update save/load button text
-  saveButton.textContent = t("save_game_prompt");
-  loadButton.textContent = t("load_game_prompt");
+  // FIXME: Using prompt and not button text. Also need to translate the prompt text.
+  // saveButton.textContent = t("save_game_prompt");
+  // loadButton.textContent = t("load_game_prompt");
 
   // Update undo/redo button text
   undoButton.textContent = t("undo_checkpoint");
   redoButton.textContent = t("redo_checkpoint");
 
   // Update instructions text
- updateInstructions();
+  updateInstructions();
 }
 
 function updateAllDisplays(): void {
@@ -239,12 +242,10 @@ function updateAllDisplays(): void {
   updateDayDisplay();
   updateScoreDisplay();
   updateWeatherDisplay();
-  updateText();
-  updateInstructions();
 }
 
 advanceDayButton.onclick = () => {
-  // Game Over
+  // Game Over: Reached Score Goal
   if (calculateScore() >= SCORE_GOAL) {
     alert(
       "Game Over! You surpassed the goal! Youe final score: " +
@@ -257,6 +258,8 @@ advanceDayButton.onclick = () => {
 
     return;
   }
+
+  // Game Over: Reached End Day
   if (game.dayManager.getCurrentDay() >= END_DAY) {
     alert("Game Over! Your final score is: " + calculateScore());
 
@@ -305,7 +308,7 @@ function handleLoad(): void {
       updateAllDisplays();
       alert(`Game loaded from slot ${slot}`);
     } else {
-      alert(`No save found in slot ${slot}`);
+      alert(`No save found for slot ${slot}`);
     }
   }
 }
@@ -363,12 +366,14 @@ redoButton.onclick = () => {
   }
 };
 
-dayControls.appendChild(dayCounter);
-dayControls.appendChild(advanceDayButton);
-dayControls.appendChild(saveButton);
-dayControls.appendChild(loadButton);
-dayControls.appendChild(undoButton);
-dayControls.appendChild(redoButton);
+dayControls.append(
+  dayCounter,
+  advanceDayButton,
+  saveButton,
+  loadButton,
+  undoButton,
+  redoButton,
+);
 gameHud.appendChild(dayControls);
 
 // ====== Instructions ======
@@ -382,31 +387,36 @@ instructions.appendChild(description);
 
 function updateInstructions(): void {
   // Locate the instructions container
-  const instructions = document.querySelector("#instructions-debug") as HTMLDivElement;
+  const instructions = document.querySelector(
+    "#instructions-debug",
+  ) as HTMLDivElement;
 
   if (instructions) {
     // Clear existing content
     instructions.innerHTML = `<h2>${t("controls")}</h2><hr>`;
 
     // Add translated controls dynamically
-    const controls: { [key: string]: string } = {
-      "Left Click": t("controls_left_click"),
-      "Right Click": t("controls_right_click"),
-      "WASD / Arrow Keys": t("controls_movement"),
-      "1 / 2 / 3": t("controls_switch"),
-    };
+    const controls: Map<string, string> = new Map([
+      [t("left_click"), t("controls_left_click")],
+      [t("right_click"), t("controls_right_click")],
+      [t("arrowsWasd"), t("controls_movement")],
+      [t("cycle_plant"), t("controls_switch")],
+    ]);
 
-    instructions.innerHTML += Object.entries(controls)
-      .map(([input, action]) => `<p><strong>${input}</strong>: ${action}</p>`)
-      .join("\n");
+    for (const [input, action] of controls) {
+      instructions.innerHTML += `<p><strong>${input}</strong>: ${action}</p>`;
+    }
 
     // Add description text dynamically
-    instructions.innerHTML += `<p id="instructions-description">${t("description", { end_day: END_DAY })}</p>`;
+    instructions.innerHTML += `<p id="instructions-description">${
+      t("description", { end_day: END_DAY })
+    }</p>`;
 
     // Update plant-specific instructions
     for (const type in PlantType) {
       if (!isNaN(Number(type))) {
         const typeNum: number = Number(type);
+        if (typeNum === PlantType.Withered) continue;
         const description = getPlantDescription(typeNum);
         if (description) {
           instructions.innerHTML += description;
@@ -415,8 +425,6 @@ function updateInstructions(): void {
     }
   }
 }
-
-
 
 const languageSelector = document.createElement("select");
 ["en", "zh", "ar"].forEach((lang) => {
@@ -434,11 +442,10 @@ languageSelector.onchange = (e) => {
   document.documentElement.dir = selectedLanguage === "ar" ? "rtl" : "ltr";
 
   // Refresh all dynamic text
-  updateAllDisplays();
+  updateText();
 };
 
 document.body.insertBefore(languageSelector, app);
-
 
 // ====== Keyboard Listeners ======
 document.addEventListener("keydown", (e) => {
@@ -465,27 +472,28 @@ document.addEventListener("keydown", (e) => {
       break;
     case "1":
     case "num1":
-      game.player.setCurrentPlantType(PlantType.Corn);
+    case "-":
+      game.player.cyclePlantType(false);
       updatePlantSelect();
       break;
     case "2":
     case "num2":
-      game.player.setCurrentPlantType(PlantType.Cactus);
-      updatePlantSelect();
-      break;
-    case "3":
-    case "num3":
-      game.player.setCurrentPlantType(PlantType.Flower);
+    case "=":
+      game.player.cyclePlantType(true);
       updatePlantSelect();
       break;
   }
 });
 
 // ====== Initialize DOM display ======
-app.appendChild(title);
-app.appendChild(gameGrid);
-app.appendChild(gameHud);
-app.appendChild(instructions);
+app.append(
+  title,
+  gameGrid,
+  gameHud,
+  instructions,
+);
+
+updatePlantSelect();
 updateAllDisplays();
 updateText();
 

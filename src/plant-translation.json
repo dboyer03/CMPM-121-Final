@@ -1,0 +1,48 @@
+{
+  "names": {
+    "en": [
+      "Corn",
+      "Cactus",
+      "Flower",
+      "Withered",
+      "Weed"
+    ],
+    "zh": [
+      "玉米",
+      "仙人掌",
+      "花",
+      "枯萎",
+      "杂草"
+    ],
+    "ar": [
+      "ذرة",
+      "صبار",
+      "زهرة",
+      "ذابلة",
+      "عشبة ضارة"
+    ]
+  },
+  "descriptions": {
+    "en": [
+      "<p><strong>Corn</strong>:<br>To Grow:<br> {waterToGrow} water,<br>{sunToGrow} sunlight,<br>{maxCrowding} maximum adjacent plants<br>Can sow at level {maxGrowth}</p>",
+      "<p><strong>Cactus</strong>:<br>To Grow:<br> {waterToGrow} water,<br>{sunToGrow} sunlight,<br>{maxCrowding} maximum adjacent plants<br>Can sow at level {maxGrowth}</p>",
+      "<p><strong>Flower</strong>:<br>To Grow:<br> {waterToGrow} water,<br>{sunToGrow} sunlight,<br>{maxCrowding} maximum adjacent plants<br>Can sow at level {maxGrowth}</p>",
+      "<p><strong>Withered</strong><p>",
+      "<p><strong>Weed</strong>:<br>To Grow:<br> In any conditions<br>Growth maxes out at {maxGrowth}<br>Can remove at any level<br>Will crowd out other plants and spread</p>"
+    ],
+    "zh": [
+      "<p><strong>玉米</strong>：<br>种植：<br> {waterToGrow} 水，<br>{sunToGrow} 阳光，<br>{maxCrowding} 最大相邻植物<br>可在 {maxGrowth} 水平播种，</p>",
+      "<p><strong>仙人掌</strong>：<br>种植：<br> {waterToGrow} 水，<br>{sunToGrow} 阳光，<br>{maxCrowding} 最大相邻植物<br>可在 {maxGrowth} 水平播种，</p>",
+      "<p><strong>花</strong>：<br>种植：<br> {waterToGrow} 水，<br>{sunToGrow} 阳光，<br>{maxCrowding} 最大相邻植物<br>可在 {maxGrowth} 水平播种，</p>",
+      "<p><strong>枯萎</strong><p>",
+      "<p><strong>杂草</strong>：<br>生长：<br>在任何条件下<br>生长最大值为 {maxGrowth><br>可在任何程度上移除<br>将挤占其他植物并蔓延</p>"
+    ],
+    "ar": [
+      "<p><strong>الذرة</strong>:<br>للنمو:<br> {waterToGrow} ماء،<br>{sunToGrow} ضوء الشمس،<br>{maxCrowding} أقصى حد من النباتات المجاورة<br>يمكن زراعتها عند مستوى {maxGrowth}",
+      "<p><strong>الصبار</strong>:<br>للنمو:<br> {waterToGrow} ماء،<br>{sunToGrow} ضوء الشمس،<br>{maxCrowding} أقصى حد من النباتات المجاورة<br>يمكن زراعتها عند مستوى {maxGrowth}",
+      "<p><strong>الزهرة</strong>:<br>للنمو:<br> {waterToGrow} ماء،<br>{sunToGrow} ضوء الشمس،<br>{maxCrowding} أقصى حد من النباتات المجاورة<br>يمكن زراعتها عند مستوى {maxGrowth}",
+      "<p><strong>ذبل</strong><p>",
+      "<p><strong>الحشائش الضارة</strong>:<br>النمو:<br> في أي ظروف<br>يصل النمو إلى الحد الأقصى عند {maxGrowth}<br>يمكن إزالته على أي مستوى<br>سيتسبب في زحزحة النباتات الأخرى وانتشارها</p>"
+    ]
+  }
+}

@@ -2,6 +2,7 @@
   display: grid;
   gap: 1px;
   border: 5px solid green;
+  direction: ltr;
 }
 
 .grid-cell {
@@ -13,6 +14,7 @@
   justify-content: center;
   align-items: center;
   position: relative;
+  direction: ltr;
 }
 
 .water-segment {
