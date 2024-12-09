@@ -18,13 +18,13 @@ export class DayManager {
     this.statTracker = statTracker;
 
     // preserveEnvironment flag can be used when loading a save state
-    //   false by default to allow environment to initialize
-    if (!preserveEnvironment) this.grid.updateEnvironment();
+    // false by default to allow environment initialize
+    if (!preserveEnvironment) this.grid.updateEnvironment("sunny");
   }
 
-  advanceDay(): void {
+  advanceDay(weather: string): void {
     this.dayCount++;
-    this.grid.updateEnvironment();
+    this.grid.updateEnvironment(weather);
     plantProcessor(this.grid, this.statTracker);
   }
 

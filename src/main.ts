@@ -9,6 +9,7 @@ import {
 } from "./plant.ts";
 import { parse } from "toml";
 
+
 import "./style.css";
 import "./game.css";
 
@@ -34,6 +35,30 @@ const GAME_CONFIG: GameConfig = {
   gridHeight: GRID_SIZE,
 };
 
+const WEATHER_OPTIONS = [
+  { weather: "sunny", weight: data.starting_conditions.sunny_chances },
+  { weather: "rainy", weight: data.starting_conditions.rainy_chances },
+  { weather: "hot", weight: data.starting_conditions.hot_chances },
+];
+
+const totalWeight = WEATHER_OPTIONS.reduce(
+  (sum, WEATHER_OPTIONS) => sum + WEATHER_OPTIONS.weight,
+  0,
+);
+const random = Math.random() * totalWeight;
+
+function weatherSelect(): string {
+  let cumulativeWeight = 0;
+  for (const option of WEATHER_OPTIONS) {
+    cumulativeWeight += option.weight;
+    if (random <= cumulativeWeight) {
+      return option.weather;
+    }
+  }
+
+  throw new Error("Invalid weight configuration");
+}
+
 const app = document.querySelector<HTMLDivElement>("#app")!;
 
 // ====== Title ======
@@ -49,7 +74,8 @@ let game: Game = stateManager.newGame();
 function calculateScore(): number {
   let score = 0;
 
-  score = (game.statTracker.get("plantSown") ?? 0) * 0.5 + // 0.5 points per plant sown
+  score =
+    (game.statTracker.get("plantSown") ?? 0) * 0.5 + // 0.5 points per plant sown
     (game.statTracker.get("plantReaped") ?? 0) * 1 + // 1 point per plant reaped
     (game.statTracker.get("plantDied") ?? 0) * -1 + // -1 points per plant died
     Math.floor((game.statTracker.get("maxGridAlive") ?? 0) / 10) * 10; // 10 points per every 10 plants alive at once
@@ -173,7 +199,6 @@ function updateDayDisplay(): void {
 }
 
 function updateAllDisplays(): void {
-
   updateGridDisplay();
   updateDayDisplay();
   updateScoreDisplay();
@@ -181,8 +206,11 @@ function updateAllDisplays(): void {
 
 advanceDayButton.onclick = () => {
   // Game Over
-  if (calculateScore() >= SCORE_GOAL){
-    alert("Game Over! You surpassed the goal! Youe final score: " + calculateScore());
+  if (calculateScore() >= SCORE_GOAL) {
+    alert(
+      "Game Over! You surpassed the goal! Youe final score: " +
+        calculateScore(),
+    );
 
     game = stateManager.newGame(GAME_CONFIG);
     updateAllDisplays();
@@ -202,7 +230,7 @@ advanceDayButton.onclick = () => {
   }
 
   // Next day
-  game.dayManager.advanceDay();
+  game.dayManager.advanceDay(weatherSelect());
   stateManager.autoSave(game);
   updateAllDisplays();
 };
@@ -224,9 +252,9 @@ function handleLoad(): void {
   }
 
   const slot = prompt(
-    `Enter save slot name:\nAvailable slots:\n${
-      slots.map((s) => s.replace("save_", "")).join("\n")
-    }`,
+    `Enter save slot name:\nAvailable slots:\n${slots
+      .map((s) => s.replace("save_", ""))
+      .join("\n")}`,
   );
   if (slot) {
     const loadSave = stateManager.tryLoadSave(slot);
@@ -319,8 +347,7 @@ const instructions = document.createElement("div");
   }
 
   // TODO: Describe mechanics and limitations (e.g. player reach, plant growth, water/sunlight, etc.)
-  description.innerText =
-    `Click the cells current or adjacent to the farmer to sow or reap plants. \
+  description.innerText = `Click the cells current or adjacent to the farmer to sow or reap plants. \
     Click the Finish Day button to end your turn, advance the day, and autosave a checkpoint. \
     You can use the Undo and Redo Checkpoint buttons if you want to replay a day/checkpoint. \
     You can also manually create and load saves mid-day, creating more checkpoints for extra granularity. \
