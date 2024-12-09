@@ -8,6 +8,8 @@ import {
   PlantType,
 } from "./plant.ts";
 import { parse } from "toml";
+import { t, setLanguage, Language } from "./translation.ts";
+
 
 import "./style.css";
 import "./game.css";
