@@ -81,5 +81,18 @@ export const translations = {
   };
   
   
-  export type Language = keyof typeof translations;
+export type Language = keyof typeof translations;
   
+let currentLanguage: Language = "en";
+
+export const setLanguage = (language: Language) => {
+  currentLanguage = language;
+};
+
+export const t = (key: string, params: Record<string, string | number> = {}): string => {
+  let text = translations[currentLanguage][key] || key;
+  Object.keys(params).forEach((param) => {
+    text = text.replace(`{${param}}`, String(params[param]));
+  });
+  return text;
+};  

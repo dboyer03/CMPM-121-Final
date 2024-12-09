@@ -1,6 +1,8 @@
 // ====== Main + Imports ======
 import { Game, GameConfig, StateManager } from "./state.ts";
 import { getCssName, PlantAction, PlantType, PlantTypeInfo } from "./plant.ts";
+import { t, setLanguage, Language } from "./translations";
+
 
 import "./style.css";
 import "./game.css";
