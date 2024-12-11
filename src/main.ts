@@ -226,9 +226,8 @@ async function main() {
     advanceDayButton.textContent = t("finish_day");
 
     // Update save/load button text
-    // FIXME: Using prompt and not button text. Also need to translate the prompt text.
-    // saveButton.textContent = t("save_game_prompt");
-    // loadButton.textContent = t("load_game_prompt");
+    saveButton.textContent = t("save_game");
+    loadButton.textContent = t("load_game");
 
     // Update undo/redo button text
     undoButton.textContent = t("undo_checkpoint");
@@ -248,10 +247,8 @@ async function main() {
   advanceDayButton.onclick = () => {
     // Game Over: Reached Score Goal
     if (calculateScore() >= SCORE_GOAL) {
-      alert(
-        "Game Over! You surpassed the goal! Youe final score: " +
-          calculateScore(),
-      );
+      const score = calculateScore();
+      alert(t("game_over", { score }));
 
       game = stateManager.newGame(GAME_CONFIG);
       updateAllDisplays();
@@ -262,7 +259,8 @@ async function main() {
 
     // Game Over: Reached End Day
     if (game.dayManager.getCurrentDay() >= END_DAY) {
-      alert("Game Over! Your final score is: " + calculateScore());
+      const score = calculateScore();
+      alert(t("game_over", { score }));
 
       game = stateManager.newGame(GAME_CONFIG);
       updateAllDisplays();
@@ -282,34 +280,32 @@ async function main() {
   // ====== Save and Load Handlers ======
   function handleSave(slot: string): void {
     if (stateManager.trySaveGame(game, slot)) {
-      alert(`Game saved to slot ${slot}`);
+      alert(t("save_game_success", { slot }));
     } else {
-      alert(`Failed to save game to slot ${slot}. Insufficient storage space.`);
+      alert(t("save_game_failure", { slot }));
     }
   }
 
   function handleLoad(): void {
     const slots = StateManager.getSaveSlots();
     if (slots.length === 0) {
-      alert("No save slots available.");
+      alert(t("no_save_slots"));
       return;
     }
 
     const slot = prompt(
-      `Enter save slot name:\nAvailable slots:\n${
-        slots
-          .map((s) => s.replace("save_", ""))
-          .join("\n")
-      }`,
+      t("load_game_prompt", {
+        slots: slots.map((s) => s.replace("save_", "")).join("\n"),
+      }),
     );
     if (slot) {
       const loadSave = stateManager.tryLoadSave(slot);
       if (loadSave) {
         game = loadSave;
         updateAllDisplays();
-        alert(`Game loaded from slot ${slot}`);
+        alert(t("load_game_success", { slot }));
       } else {
-        alert(`No save found for slot ${slot}`);
+        alert(t("load_game_failure", { slot }));
       }
     }
   }
@@ -317,12 +313,12 @@ async function main() {
   function checkForAutoSave(): void {
     if (StateManager.getSaveSlots().includes(StateManager.AUTO_SLOT)) {
       const continueGame = confirm(
-        "Do you want to continue where you left off?",
+        t("auto_save_continue"),
       );
       if (continueGame) {
         game = stateManager.tryLoadSave(StateManager.AUTO_SLOT)!;
         updateAllDisplays();
-        alert("Game loaded from auto-save.");
+        alert(t("auto_save_loaded"));
       }
     }
   }
@@ -331,7 +327,7 @@ async function main() {
   const saveButton = document.createElement("button");
   saveButton.textContent = "Save Game";
   saveButton.onclick = () => {
-    const slot = prompt("Enter save slot name:");
+    const slot = prompt(t("save_game_prompt"));
     if (slot) {
       handleSave(slot);
     }
@@ -352,7 +348,7 @@ async function main() {
       game = undoState;
     } else {
       game = stateManager.getInitialState()!;
-      alert("Resetting to initial state. No more days to undo.");
+      alert(t("reset_to_initial"));
     }
     updateAllDisplays();
   };
@@ -365,7 +361,7 @@ async function main() {
       game = redoState;
       updateAllDisplays();
     } else {
-      alert("No more days to redo.");
+      alert(t("no_days_to_redo"));
     }
   };
 
